@@ -1410,11 +1410,45 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("in
 document.addEventListener("submit",e=>{if(e.target.id==="regForm"&&e.target.dataset.rs==="1"){e.preventDefault();e.stopImmediatePropagation();rNext()}},true);
 document.addEventListener("input",e=>{if(e.target.id!=="rPw")return;const s=pwScore(e.target.value),m=$("#rPwm"),t=$("#rPwt");if(m)m.dataset.s=s;
   if(t)t.textContent=s===0?tx("8 أحرف على الأقل، ويُفضّل مزج الحروف والأرقام.","At least 8 characters; mix letters and numbers."):[tx("ضعيفة","Weak"),tx("ضعيفة","Weak"),tx("متوسطة","Fair"),tx("جيدة","Good"),tx("قوية","Strong")][s]});
+/* ---- Post sign-in welcome hub: systems + what's new ---- */
+function hubKey(){return "sbx:hubOff:"+(S.me&&S.me.id)}
+function hubOff(){try{return localStorage.getItem(hubKey())==="1"}catch(_){return false}}
+function maybeHub(){if(!S.me||hubOff())return false;openHub();return true}
+function openHub(){
+  closeHub(true);
+  const A=apps().slice(0,6),N=news().slice(0,3),now=new Date(),hr=now.getHours();
+  const g=AR()?(hr<12?"صباح الخير":"مساء الخير"):(hr<12?"Good morning":hr<17?"Good afternoon":"Good evening");
+  const first=(uname(S.me)||"").trim().split(/\s+/)[0];
+  let date="";try{date=now.toLocaleDateString(AR()?"ar-OM-u-nu-latn":"en-GB",{weekday:"long",day:"numeric",month:"long"})}catch(_){}
+  const el=document.createElement("div");el.id="hub";el.className="hub";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-labelledby","hubT");
+  el.innerHTML=`<div class="hub-bg" aria-hidden="true"><img src="${IMG.team}" alt=""><div class="waves">${waves()}</div></div>
+  <div class="hub-in">
+   <header class="hub-top">${brandLogo()}<button type="button" class="hub-skip" data-hubclose>${tx("تخطَّ","Skip")}${I("close")}</button></header>
+   <div class="hub-hello"><span class="hub-date"><i></i>${esc(date)}</span><h1 id="hubT">${g}${AR()?"،":","} <b>${esc(first)}</b></h1><p>${tx("من أين تبدأ اليوم؟ افتح أحد أنظمتك، أو اطّلع على آخر المستجدات.","Where do you want to start? Open one of your systems, or catch up on what’s new.")}</p></div>
+   <div class="hub-grid">
+    <section class="hub-card hub-apps" aria-labelledby="hubA"><div class="hub-h"><h2 id="hubA">${I("grid")}${tx("أنظمتك","Your systems")}</h2><a href="#apps" data-go="apps" data-hubclose>${tx("كل الأنظمة","All systems")}</a></div>
+     <div class="hub-tiles">${A.map((a,i)=>{const u=safeUrl(a.url);return `<a class="hub-tile" ${appAttrs(a)} style="--i:${i}"><span class="ic" style="background:${esc(a.color)}">${I(a.icon)}</span><b>${esc(L(a,"name"))}</b><small>${esc(L(a,"desc"))}</small>${u?`<span class="hx">${I("ext")}</span>`:""}</a>`}).join("")}</div></section>
+    <section class="hub-card hub-news" aria-labelledby="hubN"><div class="hub-h"><h2 id="hubN">${I("sparkle")}${tx("ما الجديد","What’s new")}</h2><a href="#news" data-go="news" data-hubclose>${tx("كل الأخبار","All news")}</a></div>
+     <div class="hub-list">${N.length?N.map((n,i)=>{const c=NCATS[n.cat]||NCATS.general;return `<button type="button" class="hub-new" data-news="${esc(n.id)}" style="--i:${i}">${nimg(n)}<span class="hn"><em style="--c:${c.c}">${AR()?c.ar:c.en}</em><b>${esc(L(n,"title"))}</b><small>${ago(n.at||n.createdAt)}</small></span></button>`}).join(""):`<p class="hub-empty">${tx("لا جديد الآن.","Nothing new right now.")}</p>`}</div></section>
+   </div>
+   <footer class="hub-foot"><label class="hub-off"><input type="checkbox" id="hubOff">${tx("لا تعرض هذه الشاشة بعد الدخول","Don’t show this after sign-in")}</label></footer>
+  </div>`;
+  document.body.appendChild(el);document.body.classList.add("hub-open");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("on")));
+  setTimeout(()=>{const b=el.querySelector(".hub-skip");if(b)b.focus({preventScroll:true})},80);
+}
+function closeHub(instant){const el=document.getElementById("hub");if(!el)return;
+  const off=el.querySelector("#hubOff");if(off&&off.checked&&S.me){try{localStorage.setItem(hubKey(),"1")}catch(_){}}
+  document.body.classList.remove("hub-open");el.removeAttribute("id");
+  if(instant===true){el.remove();return}el.classList.remove("on");el.classList.add("off");setTimeout(()=>el.remove(),320)}
+document.addEventListener("click",e=>{const h=e.target.closest(".hub");if(!h||h.classList.contains("off"))return;
+  if(e.target.closest("[data-hubclose],.hub-tile,.hub-new"))closeHub()},true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.getElementById("hub")){e.preventDefault();closeHub()}});
 async function doLogin(){
   const e=$("#lEmail").value.trim(),p=$("#lPw").value,box=$("#lerr");
   if(!e||!p){box.innerHTML=ferr(tx("أدخل البريد وكلمة المرور.","Enter your email and password."));return}
   const b=$("#loginForm button[type=submit]");b.disabled=true;
-  try{S.me=await SB.auth.login(e,p,"portal");S.authMode="login";S._lastUnread=unread();go(location.hash.slice(1)||"home");toast(tx("أهلًا ","Welcome, ")+uname(S.me))}
+  try{S.me=await SB.auth.login(e,p,"portal");S.authMode="login";S._lastUnread=unread();go(location.hash.slice(1)||"home");if(!maybeHub())toast(tx("أهلًا ","Welcome, ")+uname(S.me))}
   catch(er){const m={invalid:tx("البريد أو كلمة المرور غير صحيحة.","Wrong email or password."),pending:tx("حسابك بانتظار التفعيل من الموارد البشرية.","Your account is awaiting HR activation."),disabled:tx("هذا الحساب موقوف. تواصل مع الموارد البشرية.","This account is disabled. Contact HR.")}[er.code]||tx("تعذّر الدخول.","Couldn’t sign in.");box.innerHTML=ferr(m);b.disabled=false}
 }
 async function doRegister(){
@@ -1427,11 +1461,11 @@ async function doRegister(){
   else if(!$("#rOk").checked)m=tx("وافق على سياسة السرية للمتابعة.","Accept the confidentiality policy to continue.");
   if(m){box.innerHTML=ferr(m);box.scrollIntoView({block:"center",behavior:"smooth"});return}
   const b=$("#regForm button[type=submit]");b.disabled=true;
-  try{const u=await SB.auth.register(f);if(u.status==="active"){S.me=await SB.auth.login(u.email,f.password,"portal");go("home");toast(tx("تم إنشاء حسابك","Account created"))}else{S.pendEmail=u.email;S.authMode="pending";renderView(false);window.scrollTo(0,0)}}
+  try{const u=await SB.auth.register(f);if(u.status==="active"){S.me=await SB.auth.login(u.email,f.password,"portal");go("home");if(!maybeHub())toast(tx("تم إنشاء حسابك","Account created"))}else{S.pendEmail=u.email;S.authMode="pending";renderView(false);window.scrollTo(0,0)}}
   catch(er){box.innerHTML=ferr(tx("تعذّر إنشاء الحساب. حاول مرة أخرى.","Couldn’t create the account. Try again."));b.disabled=false}
 }
 const ferr=m=>`<div class="ferr" role="alert">${I("alert")}<span>${esc(m)}</span></div>`;
-function logout(){SB.auth.logout("portal");S.me=null;closeUmenu();closeDrawer();closeSide();S.authMode="login";renderShell();renderView(false);window.scrollTo(0,0)}
+function logout(){closeHub(true);SB.auth.logout("portal");S.me=null;closeUmenu();closeDrawer();closeSide();S.authMode="login";renderShell();renderView(false);window.scrollTo(0,0)}
 
 /* ---- MAIL ---- */
 const MFOLD=[["inbox","inbox",["الوارد","Inbox"]],["starred","star",["المميزة","Starred"]],["sent","send",["المرسلة","Sent"]],["archive","archive",["الأرشيف","Archive"]],["trash","trash",["المحذوفات","Trash"]]];
@@ -1646,6 +1680,7 @@ let PI=[],PS=0;
 function pindex(){const it=[];
  SB.users().filter(u=>u.status==="active"&&u.id!==S.me.id).forEach(u=>it.push({i:"user",c:"#0A8BA0",l:uname(u),kw:[u.email,u.name_ar,u.name_en,u.job,u.branch].join(" "),k:tx("زميل · رسالة","Colleague · message"),a:()=>compose(u.email)}));
  NAV.forEach(n=>it.push({i:n.i,c:"#0A8BA0",l:AR()?n.ar:n.en,k:tx("صفحة","Page"),a:()=>go(n.k)}));
+ it.push({i:"sparkle",c:"#083E46",l:tx("شاشة الترحيب: الأنظمة وما الجديد","Welcome screen: systems & what’s new"),kw:"welcome hub ترحيب أنظمة جديد",k:tx("صفحة","Page"),a:()=>{try{localStorage.removeItem(hubKey())}catch(_){}openHub()}});
  it.push({i:"edit",c:"#2F9E57",l:tx("رسالة جديدة","New message"),kw:"mail email بريد رسالة compose",k:tx("البريد","Mail"),a:()=>compose()});
  SB.DEPTS.forEach(d=>it.push({i:"mail",c:d.c,l:tx("راسل ","Message ")+(AR()?d.ar:d.en),kw:d.k+"@ "+d.en,k:tx("البريد","Mail"),a:()=>compose(d.k+"@"+SB.domain())}));
  docs().forEach(d=>it.push({i:"file",c:(CATS[d.cat]||CATS.other).c,l:L(d,"title"),kw:[d.desc_ar,d.desc_en,d.title_en,d.title_ar].join(" "),k:tx("مستند","Document"),a:()=>openDoc(d.id)}));
