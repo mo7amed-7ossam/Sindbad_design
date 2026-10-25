@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sindbad Dashboard</title>
+<meta name="description" content="لوحة تحكم البوابة الداخلية للسندباد">
+<link rel="icon" href="../assets/brand/sindbad-symbol.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@200;300;400;500;600&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="ux.css">
+<script>try{const t=localStorage.getItem("sbd_theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<div id="root"></div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle"><div class="dh"><div><h2 id="dTitle"></h2><small id="dSub"></small></div><button class="btn o icon" id="dClose" aria-label="Close"></button></div><div class="db" id="dBody"></div><div class="df" id="dFoot" hidden></div></aside>
+<dialog id="pal"><div class="pal"><div class="q"><span id="palI"></span><input id="palQ" autocomplete="off" aria-label="Search"></div><ul id="palL"></ul></div></dialog>
+<dialog id="cfm"><div class="cfm"><h3 id="cfmT"></h3><p class="muted" id="cfmP" style="margin:0"></p><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button class="btn o" id="cfmN"></button><button class="btn" id="cfmY" style="background:#D93B41;color:#fff"></button></div></div></dialog>
+<div class="toast" id="toast" role="status"></div>
+<script src="../assets/js/store.js"></script>
+<script src="dashboard.js"></script>
+<script src="../assets/js/accessibility.js"></script>
+</body>
+</html>
