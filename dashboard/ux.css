@@ -32,3 +32,47 @@
 .tile .ic{color:#fff}
 .srow .mv button svg{display:block}
 .demo2 button svg{flex-shrink:0}
+
+/* ===== Login v2: simpler card and form ===== */
+.lwrap{width:min(420px,100%);display:grid;gap:18px;animation:pop .4s ease-out}
+.lbox{width:100%;border-radius:20px;padding:32px;box-shadow:0 40px 80px -30px rgba(0,0,0,.6);animation:none}
+.lbox .lg{margin-bottom:28px}
+.lbox .lg .brand-logo{width:124px}
+.ltag{font-size:12px;font-weight:600;color:var(--soft-ink);background:var(--soft);padding:5px 11px;border-radius:999px}
+.lbox h1{margin:0 0 4px;font-weight:400;font-size:26px}
+.lbox>p{margin:0 0 24px;color:var(--muted);font-size:14px}
+.lbox .field{gap:7px;margin-bottom:16px}
+.lbox .field>label,.lbox .lrow label{font-size:13.5px;font-weight:500;color:var(--ink)}
+.lbox .inp{height:48px;border-radius:12px;font-size:15px;box-shadow:0 1px 2px rgba(8,52,59,.05)}
+.lbox .inp:hover{border-color:color-mix(in srgb,var(--sea) 40%,var(--line2))}
+.lbox .inp:focus{box-shadow:0 0 0 3px var(--ring)}
+.lbox .inpg.em .inp{text-align:left;padding:0 124px 0 14px}
+.lbox .inpg.em .suf{right:0;left:auto;height:28px;padding:0 14px;border-radius:0;background:none;border-left:1px solid var(--line);font-size:14px}
+[dir="rtl"] .lbox .inp.pw{padding-left:48px}
+[dir="ltr"] .lbox .inp.pw{padding-right:48px}
+.lbox .inpg .eye{position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:6px;width:36px;height:36px;border-radius:9px;border:0;background:none;color:var(--muted);cursor:pointer;display:grid;place-items:center}
+.lbox .inpg .eye:hover{background:var(--surface2);color:var(--ink)}
+.lbox .inpg .eye svg{width:18px;height:18px;display:block}
+.lrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lnk{all:unset;cursor:pointer;font-size:13px;font-weight:500;color:var(--sea)}
+.lnk:hover{text-decoration:underline}
+.lnk:focus-visible{outline:2px solid var(--ring);border-radius:4px}
+.lrem{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ink2);margin:2px 0 22px;cursor:pointer}
+.lrem input{width:17px;height:17px;accent-color:var(--sea);margin:0}
+.lsub{width:100%;height:48px;border-radius:12px;font-size:15px;font-weight:600;justify-content:center;box-shadow:0 8px 18px -10px rgba(10,139,160,.7)}
+.lbox .demo2{margin-top:22px;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.lbox .demo2 summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:500;color:var(--muted)}
+.lbox .demo2 summary::-webkit-details-marker{display:none}
+.lbox .demo2[open] summary svg{transform:rotate(180deg)}
+.lbox .demo2 .rows{margin-top:10px;gap:4px}
+.lbox .demo2 button{border:0;padding:8px;gap:10px}
+.lbox .demo2 button:hover{background:var(--soft)}
+.dav{width:30px;height:30px;border-radius:9px;background:var(--soft);color:var(--soft-ink);display:grid;place-items:center;font-weight:600;font-size:13px;flex-shrink:0}
+.dtx{display:grid;min-width:0;text-align:start}
+.dtx b{font-weight:600;font-size:13px}
+.lbox .demo2 .dtx .ltr{margin:0;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dnote{margin:8px 0 0!important;font-size:12px!important;color:var(--muted)}
+.lfoot{margin:0;text-align:center;font-size:13.5px;color:rgba(255,255,255,.72)}
+.lfoot a{color:var(--lime);font-weight:600;text-decoration:none}
+.lfoot a:hover{text-decoration:underline}
+@media (max-width:480px){.lbox{padding:24px 20px}}

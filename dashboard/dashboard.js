@@ -165,15 +165,20 @@ function runPal(n){const i=PI[n];if(!i)return;$("#pal").close();setTimeout(i.a,4
 const DEMO=[["admin","Admin@2026",["مدير النظام — كل الصلاحيات","Administrator — full access"]],["maryam.albalushi","Sindbad@2026",["الموارد البشرية — الطلبات والموظفون","HR — requests & people"]],["salim.alharthi","Sindbad@2026",["التقنية — الحسابات والأنظمة","IT — accounts & systems"]],["noura.alkindi","Sindbad@2026",["محررة المحتوى — الأخبار والمكتبة","Content editor — news & library"]]];
 function loginView(){return `<section class="login"><img src="${img("leadership")}" alt=""><div class="waves">${waves()}</div>
  <div class="ltop"><button class="ib" data-lang>${AR()?"EN":"ع"}</button><button class="ib" data-themebtn aria-label="Theme">${I(isDark()?"sun":"moon")}</button></div>
- <div class="lbox"><div class="lg">${logo("color")}<span class="chip dk">DASHBOARD</span></div>
-  <h1>${tx("لوحة التحكم","Staff dashboard")}</h1><p>${tx("للموظفين الإداريين: إدارة محتوى البوابة، الطلبات، الموظفين والبريد.","For admin staff: manage portal content, requests, people and mail.")}</p>
+ <div class="lwrap"><div class="lbox"><div class="lg">${logo("color")}<span class="ltag">${tx("لوحة التحكم","Dashboard")}</span></div>
+  <h1>${tx("تسجيل الدخول","Sign in")}</h1><p>${tx("للموظفين الإداريين في السندباد.","For Sindbad admin staff.")}</p>
   <form id="dlogin" novalidate><div id="derr"></div>
-   <div class="field"><label for="dE">${tx("البريد الإلكتروني","Email")}</label><div class="inpg"><input class="inp ltr" id="dE" autocomplete="username" style="padding-inline-end:116px" placeholder="name"><span class="suf">@${esc(SB.domain())}</span></div></div>
-   <div class="field"><label for="dP">${tx("كلمة المرور","Password")}</label><input class="inp ltr" id="dP" type="password" autocomplete="current-password"></div>
-   <button class="btn p" type="submit" style="width:100%;height:50px;border-radius:15px;margin-top:6px">${tx("دخول لوحة التحكم","Sign in to dashboard")}</button>
+   <div class="field"><label for="dE">${tx("البريد الإلكتروني","Work email")}</label><div class="inpg em" dir="ltr"><input class="inp" id="dE" autocomplete="username" placeholder="name" spellcheck="false"><span class="suf">@${esc(SB.domain())}</span></div></div>
+   <div class="field"><div class="lrow"><label for="dP">${tx("كلمة المرور","Password")}</label><button type="button" class="lnk" data-forgot>${tx("نسيت كلمة المرور؟","Forgot password?")}</button></div><div class="inpg"><input class="inp ltr pw" id="dP" type="password" autocomplete="current-password"><button type="button" class="eye" data-dpw aria-label="${tx("إظهار كلمة المرور","Show password")}">${I("eye")}</button></div></div>
+   <label class="lrem"><input type="checkbox" checked>${tx("تذكرني على هذا الجهاز","Keep me signed in")}</label>
+   <button class="btn p lsub" type="submit">${tx("دخول","Sign in")}</button>
   </form>
-  <div class="demo2"><p>${tx("حسابات تجريبية بصلاحيات مختلفة (بيانات وهمية):","Demo accounts with different roles (sample data):")}</p><div class="rows">${DEMO.map(([e,p,l])=>`<button type="button" data-demo="${e}|${p}">${I("key","","width:16px;height:16px;color:var(--sea)")}<b style="font-weight:600">${P(l)}</b><span class="ltr">${e}@</span></button>`).join("")}</div></div>
- </div></section>`}
+  <details class="demo2"><summary>${tx("حسابات تجريبية بصلاحيات مختلفة","Demo accounts with different roles")}${I("down","","width:16px;height:16px")}</summary><div class="rows">${DEMO.map(([e,p,l])=>`<button type="button" data-demo="${e}|${p}"><span class="dav">${esc((e[0]||"").toUpperCase())}</span><span class="dtx"><b>${P(l)}</b><span class="ltr">${e}@${esc(SB.domain())}</span></span></button>`).join("")}</div><p class="dnote">${tx("بيانات وهمية للعرض فقط.","Sample data for preview only.")}</p></details>
+ </div>
+ <p class="lfoot">${tx("موظف وليس لديك حساب؟","Employee without an account?")} <a href="../index.html#register">${tx("سجّل من البوابة","Register on the portal")}</a></p></div></section>`}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-dpw],.login [data-forgot]");if(!t)return;
+ if(t.matches("[data-dpw]")){const i=$("#dP");i.type=i.type==="password"?"text":"password";t.setAttribute("aria-pressed",i.type==="text")}
+ else toast(tx("لإعادة تعيين كلمة المرور راسل قسم التقنية: it@","To reset your password, email IT: it@")+SB.domain())});
 async function doLogin(){const e=$("#dE").value.trim(),p=$("#dP").value,box=$("#derr");if(!e||!p){box.innerHTML=ferr(tx("أدخل البريد وكلمة المرور.","Enter email and password."));return}
  try{D.me=await SB.auth.login(e,p,"dashboard");D.mbox="";shell();go(location.hash.slice(1)||"overview");toast(tx("أهلًا ","Welcome, ")+uname(D.me))}
  catch(er){box.innerHTML=ferr({invalid:tx("البريد أو كلمة المرور غير صحيحة.","Wrong email or password."),forbidden:tx("هذا الحساب لا يملك صلاحية لوحة التحكم.","This account has no dashboard access."),pending:tx("الحساب بانتظار التفعيل.","Account awaiting activation."),disabled:tx("الحساب موقوف.","Account disabled.")}[er.code]||tx("تعذّر الدخول.","Couldn’t sign in."))}}

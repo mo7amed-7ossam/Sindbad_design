@@ -1355,6 +1355,7 @@ VIEWS.brand=()=>{
 /* ---- AUTH ---- */
 const DEMO=[["khalid.alrawahi","Sindbad@2026",["موظف — مستشار مبيعات","Employee — sales consultant"]],["maryam.albalushi","Sindbad@2026",["الموارد البشرية + لوحة التحكم","HR + dashboard"]],["admin","Admin@2026",["مدير النظام + لوحة التحكم","Administrator + dashboard"]]];
 function authView(){
+  if(location.hash==="#register"){S.authMode="register";try{history.replaceState(null,"",location.pathname)}catch(_){}}
   const m=S.authMode||"login";
   const body=m==="pending"?`<div class="pendbox"><span class="ring2">${I("hourglass")}</span><h2>${tx("تم إنشاء حسابك","Your account is created")}</h2><p class="muted" style="margin:0;max-width:40ch">${tx("بريدك الرسمي جاهز، وسيُفعّل حسابك بعد مراجعة الموارد البشرية. ستتمكن من الدخول فور التفعيل.","Your official mailbox is reserved and your account will be activated after HR review. You can sign in as soon as it is.")}</p><div class="emailprev" style="margin:6px 0 4px">${I("mail")}<b>${esc(S.pendEmail||"")}</b></div><button class="btn o" data-auth="login">${tx("العودة لتسجيل الدخول","Back to sign in")}</button></div>`
   :m==="register"?registerForm():loginForm();
@@ -1363,33 +1364,52 @@ function authView(){
     <div class="auth-copy"><span class="eyebrow"><i></i>${tx("Sindbad Inside · البوابة الداخلية","Sindbad Inside · employee portal")}</span><h1>${tx("كل ما يخص عملك في السندباد، في مكان واحد.","Everything about your work at Sindbad, in one place.")}</h1>
     <ul><li>${I("mail")}<span>${tx("بريدك الرسمي","Your official mailbox")} <bdi dir="ltr">@${esc(SB.domain())}</bdi></span></li><li>${I("inbox")}${tx("طلبات تتابعها لحظة بلحظة","Requests you can track live")}</li><li>${I("folder")}${tx("الأدلة والنماذج المعتمدة","Approved manuals and forms")}</li></ul></div></div>
    <div class="auth-panel"><div class="auth-top"><button class="hb" data-lang>${AR()?"EN":"ع"}</button><button class="hb" data-themebtn aria-label="Theme">${I(isDark()?"sun":"moon")}</button></div>
-    <div class="auth-card">${m==="pending"?"":`<div class="seg2" role="tablist"><button class="${m==="login"?"on":""}" data-auth="login" role="tab">${tx("تسجيل الدخول","Sign in")}</button><button class="${m==="register"?"on":""}" data-auth="register" role="tab">${tx("حساب جديد","New account")}</button></div>`}${body}</div>
+    <div class="auth-card auth-${m}">${body}${m==="pending"?"":`<p class="auth-switch">${m==="login"?`${tx("ليس لديك حساب؟","New to the portal?")} <button type="button" data-auth="register">${tx("أنشئ حسابك","Create your account")}</button>`:`${tx("لديك حساب بالفعل؟","Already have an account?")} <button type="button" data-auth="login">${tx("سجّل الدخول","Sign in")}</button>`}</p>`}</div>
     <p class="auth-foot">© ${new Date().getFullYear()} ${tx("نافذة صحار للتجارة – السندباد · للاستخدام الداخلي فقط","Nafida Sohar Trading – Sindbad · internal use only")}</p></div></section>`;
 }
-function loginForm(){return `<h2>${tx("أهلًا بعودتك","Welcome back")}</h2><p>${tx("ادخل ببريدك الرسمي في السندباد.","Sign in with your Sindbad email.")}</p>
+function loginForm(){return `<div class="auth-h"><h2>${tx("تسجيل الدخول","Sign in")}</h2><p>${tx("ادخل ببريدك الرسمي في السندباد.","Use your Sindbad work email.")}</p></div>
   <form id="loginForm" novalidate><div id="lerr"></div>
-   <div class="field"><label for="lEmail">${tx("البريد الإلكتروني","Email")}</label><div class="inpg"><input class="inp ltr" id="lEmail" autocomplete="username" required placeholder="name" style="padding-inline-end:120px"><span class="suf">@${esc(SB.domain())}</span></div></div>
-   <div class="field"><label for="lPw">${tx("كلمة المرور","Password")}</label><div class="inpg"><input class="inp ltr" id="lPw" type="password" autocomplete="current-password" required><button type="button" class="eye" data-pw="lPw" aria-label="${tx("إظهار","Show")}">${I("eye")}</button></div></div>
-   <button class="btn p xl" type="submit" style="margin-top:8px">${tx("دخول","Sign in")}${I("arrow","flip")}</button>
+   <div class="field"><label for="lEmail">${tx("البريد الإلكتروني","Work email")}</label><div class="inpg em" dir="ltr"><input class="inp" id="lEmail" autocomplete="username" required placeholder="name" spellcheck="false"><span class="suf">@${esc(SB.domain())}</span></div></div>
+   <div class="field"><div class="lrow"><label for="lPw">${tx("كلمة المرور","Password")}</label><button type="button" class="lnk" data-forgot>${tx("نسيت كلمة المرور؟","Forgot password?")}</button></div><div class="inpg"><input class="inp ltr pw" id="lPw" type="password" autocomplete="current-password" required><button type="button" class="eye" data-pw="lPw" aria-label="${tx("إظهار كلمة المرور","Show password")}">${I("eye")}</button></div></div>
+   <label class="check rem"><input type="checkbox" checked>${tx("تذكرني على هذا الجهاز","Keep me signed in on this device")}</label>
+   <button class="btn p xl" type="submit">${tx("دخول","Sign in")}</button>
   </form>
   <details class="demo"><summary>${tx("حسابات تجريبية لهذه النسخة","Demo accounts for this prototype")}${I("down").replace("<svg",'<svg style="width:16px;height:16px"')}</summary><div class="rows">${DEMO.map(([e,p,l])=>`<button type="button" data-demo="${e}|${p}">${avatarHTML({name_ar:e,name_en:e},28)}<span><b style="font-weight:600;display:block;font-size:13px">${P(l)}</b><span class="ltr" style="display:block">${e}@${esc(SB.domain())}</span></span>${I("arrow","flip").replace("<svg",'<svg style="width:15px;height:15px;color:var(--muted)"')}</button>`).join("")}</div><p class="muted sm" style="margin:10px 0 0">${tx("بيانات وهمية للعرض فقط. احذف هذا الصندوق عند الربط بخادم حقيقي.","Sample data for preview only. Remove this box when connecting a real server.")}</p></details>`}
 function registerForm(){
   const brs=branches().map(b=>L(b,"name")).concat(tx("المقر الرئيسي","Head office"));
-  return `<h2>${tx("أنشئ حسابك","Create your account")}</h2><p>${tx("يحصل كل موظف على بريد رسمي على النطاق","Every employee gets an official mailbox on")} <bdi dir="ltr">@${esc(SB.domain())}</bdi></p>
-  <form id="regForm" novalidate><div id="rerr"></div>
-   <div class="g2"><div class="field"><label for="rAr">${tx("الاسم الكامل بالعربية","Full name (Arabic)")}</label><input class="inp" id="rAr" dir="rtl" required></div>
-   <div class="field"><label for="rEn">${tx("الاسم الكامل بالإنجليزية","Full name (English)")}</label><input class="inp ltr" id="rEn" dir="ltr" required autocomplete="off"></div></div>
-   <div class="emailprev" id="rPrev">${I("mail")}<span>${tx("بريدك سيكون","Your email will be")}</span><b>name@${esc(SB.domain())}</b></div>
-   <div class="g2"><div class="field"><label for="rNo">${tx("الرقم الوظيفي","Employee no.")}</label><input class="inp ltr" id="rNo" placeholder="SB-0000"></div>
-   <div class="field"><label for="rPh">${tx("رقم الهاتف","Phone")}</label><input class="inp ltr" id="rPh" inputmode="tel" placeholder="+968"></div>
-   <div class="field"><label for="rBr">${tx("الفرع","Branch")}</label><select class="inp" id="rBr">${brs.map(b=>`<option>${esc(b)}</option>`).join("")}</select></div>
-   <div class="field"><label for="rDp">${tx("القسم","Department")}</label><select class="inp" id="rDp">${SB.DEPTS.filter(d=>d.k!=="management").map(d=>`<option value="${d.k}">${AR()?d.ar:d.en}</option>`).join("")}</select></div></div>
-   <div class="field"><label for="rJob">${tx("المسمى الوظيفي","Job title")}</label><input class="inp" id="rJob"></div>
-   <div class="g2"><div class="field"><label for="rPw">${tx("كلمة المرور (8 أحرف على الأقل)","Password (8+ characters)")}</label><div class="inpg"><input class="inp ltr" id="rPw" type="password" autocomplete="new-password" required minlength="8"><button type="button" class="eye" data-pw="rPw" aria-label="${tx("إظهار","Show")}">${I("eye")}</button></div></div>
-   <div class="field"><label for="rPw2">${tx("تأكيد كلمة المرور","Confirm password")}</label><input class="inp ltr" id="rPw2" type="password" autocomplete="new-password" required></div></div>
-   <label class="check" style="margin:4px 0 18px;font-size:13.5px"><input type="checkbox" id="rOk">${tx("أقر بالالتزام بسياسة السرية واستخدام البريد لأغراض العمل فقط.","I agree to the confidentiality policy and to use this mailbox for work only.")}</label>
-   <button class="btn p xl" type="submit">${tx("إنشاء الحساب","Create account")}</button>
+  return `<div class="auth-h"><h2>${tx("إنشاء حساب","Create your account")}</h2><p>${tx("خطوتان فقط، وتحصل على بريد رسمي على","Two quick steps, and you get an official mailbox on")} <bdi dir="ltr">@${esc(SB.domain())}</bdi></p></div>
+  <div class="rsteps" aria-hidden="true"><span class="rs on" data-s="1"><i></i>${tx("بياناتك","Your details")}</span><span class="rs" data-s="2"><i></i>${tx("العمل وكلمة المرور","Work & password")}</span></div>
+  <form id="regForm" data-rs="1" novalidate><div id="rerr"></div>
+   <div class="rstep" data-rs="1">
+    <div class="field"><label for="rAr">${tx("الاسم الكامل بالعربية","Full name in Arabic")}</label><input class="inp" id="rAr" dir="rtl" required placeholder="${tx("مثال: خالد سالم الرواحي","e.g. خالد سالم الرواحي")}"></div>
+    <div class="field"><label for="rEn">${tx("الاسم الكامل بالإنجليزية","Full name in English")}</label><input class="inp ltr" id="rEn" dir="ltr" required autocomplete="off" placeholder="Khalid Salim Al Rawahi"><p class="emailprev" id="rPrev">${I("mail")}<span>${tx("بريدك سيكون","Your email will be")}</span><b>name@${esc(SB.domain())}</b></p></div>
+    <div class="g2"><div class="field"><label for="rNo">${tx("الرقم الوظيفي","Employee no.")} <small>${tx("(اختياري)","(optional)")}</small></label><input class="inp ltr" id="rNo" placeholder="SB-0000"></div>
+    <div class="field"><label for="rPh">${tx("رقم الهاتف","Phone")}</label><input class="inp ltr" id="rPh" inputmode="tel" placeholder="+968 9000 0000"></div></div>
+    <button class="btn p xl" type="button" data-rnext>${tx("التالي","Continue")}</button>
+   </div>
+   <div class="rstep" data-rs="2">
+    <div class="g2"><div class="field"><label for="rBr">${tx("الفرع","Branch")}</label><select class="inp" id="rBr">${brs.map(b=>`<option>${esc(b)}</option>`).join("")}</select></div>
+    <div class="field"><label for="rDp">${tx("القسم","Department")}</label><select class="inp" id="rDp">${SB.DEPTS.filter(d=>d.k!=="management").map(d=>`<option value="${d.k}">${AR()?d.ar:d.en}</option>`).join("")}</select></div></div>
+    <div class="field"><label for="rJob">${tx("المسمى الوظيفي","Job title")}</label><input class="inp" id="rJob" placeholder="${tx("مثال: مصمم مطابخ","e.g. Kitchen designer")}"></div>
+    <div class="field"><label for="rPw">${tx("كلمة المرور","Password")}</label><div class="inpg"><input class="inp ltr pw" id="rPw" type="password" autocomplete="new-password" required minlength="8"><button type="button" class="eye" data-pw="rPw" aria-label="${tx("إظهار كلمة المرور","Show password")}">${I("eye")}</button></div><div class="pwm" id="rPwm" data-s="0"><i></i><i></i><i></i><i></i></div><small class="hint" id="rPwt">${tx("8 أحرف على الأقل، ويُفضّل مزج الحروف والأرقام.","At least 8 characters; mix letters and numbers.")}</small></div>
+    <div class="field"><label for="rPw2">${tx("تأكيد كلمة المرور","Confirm password")}</label><input class="inp ltr" id="rPw2" type="password" autocomplete="new-password" required></div>
+    <label class="check agree"><input type="checkbox" id="rOk"><span>${tx("أقر بالالتزام بسياسة السرية واستخدام البريد لأغراض العمل فقط.","I agree to the confidentiality policy and to use this mailbox for work only.")}</span></label>
+    <div class="ractions"><button class="btn o xl" type="button" data-rback>${tx("رجوع","Back")}</button><button class="btn p xl" type="submit">${tx("إنشاء الحساب","Create account")}</button></div>
+   </div>
   </form>`}
+function setRStep(n){const f=$("#regForm");if(!f)return;f.dataset.rs=n;document.querySelectorAll(".rsteps .rs").forEach(x=>x.classList.toggle("on",+x.dataset.s<=n));$("#rerr").innerHTML="";const el=f.querySelector(`.rstep[data-rs="${n}"] .inp`);if(el)el.focus({preventScroll:true})}
+function rNext(){const ar=$("#rAr").value.trim(),en=$("#rEn").value.trim(),box=$("#rerr");let m="";
+  if(!ar||!en)m=tx("أدخل الاسم بالعربية والإنجليزية.","Enter your name in Arabic and English.");
+  else if(!/[a-z]/i.test(en))m=tx("الاسم الإنجليزي يجب أن يكون بحروف لاتينية.","The English name must use Latin letters.");
+  if(m){box.innerHTML=ferr(m);return}setRStep(2)}
+function pwScore(v){let s=0;if(v.length>=8)s++;if(/[a-z]/.test(v)&&/[A-Z]/.test(v))s++;if(/\d/.test(v))s++;if(/[^A-Za-z0-9]/.test(v)||v.length>=12)s++;return v?Math.max(1,s):0}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-rnext],[data-rback],[data-forgot]");if(!t)return;e.stopPropagation();
+  if(t.matches("[data-rnext]"))rNext();else if(t.matches("[data-rback]"))setRStep(1);
+  else toast(tx("لإعادة تعيين كلمة المرور راسل قسم التقنية: it@","To reset your password, email IT: it@")+SB.domain())},true);
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input")&&e.target.closest('#regForm[data-rs="1"]')){e.preventDefault();rNext()}},true);
+document.addEventListener("submit",e=>{if(e.target.id==="regForm"&&e.target.dataset.rs==="1"){e.preventDefault();e.stopImmediatePropagation();rNext()}},true);
+document.addEventListener("input",e=>{if(e.target.id!=="rPw")return;const s=pwScore(e.target.value),m=$("#rPwm"),t=$("#rPwt");if(m)m.dataset.s=s;
+  if(t)t.textContent=s===0?tx("8 أحرف على الأقل، ويُفضّل مزج الحروف والأرقام.","At least 8 characters; mix letters and numbers."):[tx("ضعيفة","Weak"),tx("ضعيفة","Weak"),tx("متوسطة","Fair"),tx("جيدة","Good"),tx("قوية","Strong")][s]});
 async function doLogin(){
   const e=$("#lEmail").value.trim(),p=$("#lPw").value,box=$("#lerr");
   if(!e||!p){box.innerHTML=ferr(tx("أدخل البريد وكلمة المرور.","Enter your email and password."));return}

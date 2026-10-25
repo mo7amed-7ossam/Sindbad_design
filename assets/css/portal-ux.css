@@ -227,3 +227,73 @@
  body:not(.guest) .foot .wrap{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
  .toast{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
 }
+
+/* ===== Auth v2: simpler forms ===== */
+.auth-card{max-width:420px;padding:36px 0}
+.auth-h{margin-bottom:26px}
+.auth-card .auth-h h2{margin:0 0 6px;font-weight:400;font-size:clamp(26px,2.3vw,32px);line-height:1.25;letter-spacing:-.01em}
+.auth-h p{margin:0;color:var(--muted);font-size:14.5px}
+.auth .field{gap:7px;margin-bottom:16px}
+.auth .field label{font-size:13.5px;font-weight:500;color:var(--ink)}
+.auth .field label small{font-weight:400;color:var(--muted);font-size:12px}
+.auth .field .hint{font-size:12px;color:var(--muted)}
+.auth .inp{height:48px;border-radius:12px;border:1px solid var(--line2);background:var(--surface);font-size:15px;padding:0 14px;box-shadow:0 1px 2px rgba(8,52,59,.05);transition:border-color .15s,box-shadow .15s}
+.auth .inp::placeholder{color:color-mix(in srgb,var(--muted) 70%,transparent)}
+.auth .inp:hover{border-color:color-mix(in srgb,var(--sea) 40%,var(--line2))}
+.auth .inp:focus{border-color:var(--sea);box-shadow:0 0 0 3px var(--ring)}
+/* email with domain suffix: always reads left-to-right */
+.auth .inpg.em .inp{text-align:left;padding:0 124px 0 14px}
+.auth .inpg.em .suf{inset-inline-end:0;right:0;left:auto;height:28px;padding:0 14px;border-radius:0;background:none;border-left:1px solid var(--line);color:var(--muted);font-size:14px}
+/* password with eye toggle */
+[dir="rtl"] .auth .inp.pw{padding-left:48px}
+[dir="ltr"] .auth .inp.pw{padding-right:48px}
+.auth .inpg .eye{inset-inline-end:6px;width:36px;height:36px;border-radius:9px;color:var(--muted)}
+.auth .inpg .eye:hover{background:var(--surface2);color:var(--ink)}
+/* custom select arrow */
+.auth select.inp{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237A8C90' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-size:16px;cursor:pointer}
+[dir="rtl"] .auth select.inp{background-position:left 14px center;padding-left:38px}
+[dir="ltr"] .auth select.inp{background-position:right 14px center;padding-right:38px}
+.lrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lnk{all:unset;cursor:pointer;font-size:13px;font-weight:500;color:var(--sea)}
+.lnk:hover{text-decoration:underline}
+.lnk:focus-visible{outline:2px solid var(--ring);border-radius:4px}
+.auth .check{font-size:13.5px;color:var(--ink2);gap:10px;align-items:flex-start;line-height:1.6}
+.auth .check input{width:17px;height:17px;margin:2px 0 0;flex-shrink:0;accent-color:var(--sea)}
+.auth .check.rem{margin:2px 0 22px}
+.auth .check.agree{margin:6px 0 22px}
+.auth .btn.xl{height:48px;border-radius:12px;font-size:15px;font-weight:600}
+.auth .btn.p.xl{box-shadow:0 8px 18px -10px rgba(10,139,160,.7)}
+.auth-switch{margin:22px 0 0;text-align:center;font-size:14px;color:var(--muted)}
+.auth-switch button{all:unset;cursor:pointer;color:var(--sea);font-weight:600;margin-inline-start:4px}
+.auth-switch button:hover{text-decoration:underline}
+.auth-switch button:focus-visible{outline:2px solid var(--ring);border-radius:4px}
+/* email preview: a quiet hint line under the English name */
+.auth .emailprev{margin:4px 0 0;padding:0;background:none;color:var(--muted);font-size:12.5px;gap:6px}
+.auth .emailprev svg{width:15px;height:15px;color:var(--sea)}
+.auth .emailprev b{font-family:inherit;font-size:13px;font-weight:600;color:var(--soft-ink)}
+.auth .pendbox .emailprev{padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+/* step indicator */
+.rsteps{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:-6px 0 24px}
+.rs{display:grid;gap:8px;font-size:12.5px;font-weight:500;color:var(--muted)}
+.rs i{display:block;height:4px;border-radius:4px;background:var(--line)}
+.rs.on{color:var(--ink)}
+.rs.on i{background:var(--sea)}
+#regForm[data-rs="1"] .rstep[data-rs="2"],#regForm[data-rs="2"] .rstep[data-rs="1"]{display:none}
+.rstep{animation:rIn .25s ease-out}
+@keyframes rIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ractions{display:grid;grid-template-columns:auto 1fr;gap:10px}
+.ractions .btn.o{padding:0 22px}
+/* password strength */
+.pwm{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:2px}
+.pwm i{height:4px;border-radius:4px;background:var(--line);transition:background .2s}
+.pwm[data-s="1"] i:nth-child(-n+1){background:#D93B41}
+.pwm[data-s="2"] i:nth-child(-n+2){background:#E0912F}
+.pwm[data-s="3"] i:nth-child(-n+3){background:#0A8BA0}
+.pwm[data-s="4"] i{background:#2F9E57}
+.auth .g2{gap:0 12px}
+/* demo accounts: quieter */
+.auth .demo{margin-top:22px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.auth .demo summary{font-size:13px;font-weight:500;color:var(--muted)}
+@media (max-width:900px){.auth-card{padding:28px 0 24px}}
+@media (max-width:420px){.auth .g2{grid-template-columns:1fr}}
+.auth-card>.auth-switch{margin:24px 0 0}
