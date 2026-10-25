@@ -968,7 +968,7 @@ function renderShell(){
   $("#mnav").innerHTML=navSheet(mu,pend);
   renderTabbar(mu,pend);
   $("#hdr .brand").setAttribute("aria-label",tx("السندباد — الرئيسية","Sindbad — Home"));
-  $("#searchBtn").innerHTML=I("search")+`<span class="sl">${tx("بحث","Search")}</span>`;$("#bellIc").innerHTML=I("bell");$("#menuBtn").innerHTML=I("menu");$("#menuClose").innerHTML=I("close");$("#dClose").innerHTML=I("close");
+  $("#searchBtn").innerHTML=I("search");$("#searchBtn").setAttribute("aria-label",tx("بحث","Search"));$("#searchBtn").title=tx("بحث","Search");$("#bellIc").innerHTML=I("bell");$("#menuBtn").innerHTML=I("menu");$("#menuClose").innerHTML=I("close");$("#dClose").innerHTML=I("close");
   $("#mailBtn").innerHTML=I("mail")+(mu?`<span class="badge">${mu>99?"99+":mu}</span>`:"");
   $("#mailBtn").setAttribute("aria-label",tx(`البريد${mu?` (${mu} غير مقروءة)`:""}`,`Mail${mu?` (${mu} unread)`:""}`));
   $("#langBtn").textContent=AR()?"EN":"ع";

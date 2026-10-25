@@ -1,5 +1,5 @@
 /* Employee-first navigation and daily workspace, preserving Sindbad's visual language. */
-#menuBtn{display:inline-flex}
+#menuBtn{display:inline-grid;place-items:center;place-content:center}
 .mmenu{z-index:78;overscroll-behavior:contain}
 .mmenu:not(.open){visibility:hidden}
 .mmenu.open{visibility:visible}
@@ -178,7 +178,6 @@
 .hdr.solid .hb .dot{box-shadow:0 0 0 2px var(--surface)}
 .appc .x{display:grid;place-items:center}
 .sw:nth-child(2) .c,.sw:nth-child(3) .c{color:#08343B}
-@media (min-width:1181px){#searchBtn{min-width:120px}}
 .sw .c>span{display:grid;place-items:center}
 
 /* Palette close button */
@@ -207,3 +206,24 @@
 .hero .hsearch:hover .go{background:#DCE84A}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.hero .hsearch{background:rgba(8,52,59,.78)}}
 @media (max-width:560px){.hero .hsearch{height:58px;padding:0 18px}[dir="rtl"] .hero .hsearch{padding:0 18px}.hero .hsearch .t{font-size:14.5px}}
+
+/* Header search: icon only, same as other header buttons */
+#searchBtn,[dir="rtl"] #searchBtn{width:auto;aspect-ratio:1;min-width:0;padding:0;display:grid;place-items:center;place-content:center;justify-content:center;gap:0}
+#searchBtn .sl,#searchBtn kbd{display:none}
+
+/* Mobile nav v4: slimmer header + flat bottom bar */
+@media (max-width:760px){
+ .hdr,.hdr.solid{--hh:60px}
+ .hdr .brand-logo{width:104px}
+ .hdr .hb{width:38px;height:38px}
+ body:not(.guest) .tabbar{inset-inline:0;bottom:0;padding:4px 6px calc(4px + env(safe-area-inset-bottom,0px));border-radius:0;border:0;border-top:1px solid var(--line);box-shadow:0 -6px 20px -14px rgba(4,30,35,.35);background:color-mix(in srgb,var(--surface) 94%,transparent)}
+ .tabbar a,.tabbar button{position:relative;gap:1px;padding:5px 2px 3px;border-radius:12px;font-size:10px;line-height:1.3}
+ .tabbar .ti{width:auto;height:26px;border-radius:0;background:none!important}
+ .tabbar svg{width:20px;height:20px}
+ .tabbar .on{color:var(--sea)}
+ .tabbar .on .ti{color:var(--sea)}
+ .tabbar .on::before{content:"";position:absolute;top:-4px;inset-inline:calc(50% - 12px);height:3px;border-radius:0 0 3px 3px;background:var(--sea)}
+ .tabbar em{top:-3px;inset-inline-end:-9px;min-width:15px;height:15px;font-size:9px;padding:0 3px}
+ body:not(.guest) .foot .wrap{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+ .toast{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+}
