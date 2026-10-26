@@ -487,6 +487,22 @@
     "desc_en": "Learning platforms, guides and training updates in one place."
   }
 ];
+  /* Mobile apps published by Sindbad (store links). Managed from Dashboard → Systems & links. */
+  const MOBILE_APPS = [
+    { id: "sindbad-care", order: 1, color: "#0A8BA0",
+      name_ar: "Sindbad Care", name_en: "Sindbad Care",
+      audience_ar: "للعملاء والفنيين", audience_en: "For customers & technicians",
+      desc_ar: "طلبات تركيب وصيانة المطابخ: يرسل العميل طلبه بالصور والموقع ويحجز موعدًا ويتابع الحالة، ويستلم الفني مهامه ويوثّق العمل.",
+      desc_en: "Kitchen installation and maintenance requests: customers send photos and location, book a slot and track status; technicians receive jobs and document the work.",
+      android: "https://play.google.com/store/apps/details?id=om.sindbad.app", ios: "" }
+  ];
+  function migrateMobile() {
+    const seeded = read("seeded", {});
+    if (seeded.mobileApps === 1) return;
+    const old = list("mobile"), have = new Set(old.map(a => a.id));
+    saveAll("mobile", old.concat(MOBILE_APPS.filter(a => !have.has(a.id)).map(a => ({ ...a, createdAt: now(), updatedAt: now() }))));
+    write("seeded", { ...read("seeded", {}), mobileApps: 1 });
+  }
   function migrateSystems() {
     const seeded = read("seeded", {});
     if (seeded.systemsCatalog === 1) return;
@@ -636,10 +652,12 @@
     try { const db = await idb(); db.transaction("files", "readwrite").objectStore("files").clear(); } catch (e) {}
     await seed(true);
     migrateSystems();
+    migrateMobile();
   }
   function exportAll() {
     const o = { v: 2, at: now(), systemsCatalog: read("seeded", {}).systemsCatalog || 0, cfg: {}, cols: {} };
     COLS.forEach(c => o.cols[c] = list(c));
+    o.cols.mobile = list("mobile");
     ["settings", "company", "contact", "eotm", "seq"].forEach(k => o.cfg[k] = cfg(k, null));
     return o;
   }
@@ -650,12 +668,13 @@
         o.cols.messages.some(m=>typeof m.from!=="string" || !Array.isArray(m.to) || m.to.some(a=>typeof a!=="string") || !m.state || typeof m.body!=="string" || typeof m.subject!=="string" || !m.threadId)) throw err("format");
     return transaction(()=>{
       COLS.forEach(c => write("c:" + c, o.cols[c]));
+      if (Array.isArray(o.cols.mobile) && o.cols.mobile.every(x => x && typeof x.id === "string")) write("c:mobile", o.cols.mobile);
       ["settings","company","contact","eotm","seq"].forEach(k=>{if(o.cfg[k]!=null)setCfg(k,o.cfg[k])});
-      write("seeded", { at: now(), v: 2, systemsCatalog: o.systemsCatalog === 1 ? 1 : 0 });
+      write("seeded", { at: now(), v: 2, systemsCatalog: o.systemsCatalog === 1 ? 1 : 0, mobileApps: Array.isArray(o.cols.mobile) ? 1 : 0 });
     });
   }
 
-  const ready = seed(false).then(migrateSystems).catch(e => console.error("seed", e));
+  const ready = seed(false).then(migrateSystems).then(migrateMobile).catch(e => console.error("seed", e));
 
   global.SB = {
     ready, DOMAIN, DEPTS, ROLES, REQ_TYPES, STATUS, domain, addr,

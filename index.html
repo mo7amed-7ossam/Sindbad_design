@@ -1223,10 +1223,15 @@ VIEWS.news=()=>{
 };
 /* ---- APPS ---- */
 /* ---- APPS ---- */
+const mobileApps=()=>SB.list("mobile").slice().sort(byOrder);
+const STORE_GLYPH={android:`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3.6 2.3c-.3.3-.4.7-.4 1.2v17c0 .5.1.9.4 1.2l9.5-9.7zm10.6 10.8 2.6 2.6-11 6.3c-.4.2-.8.3-1.2.2zm3.9-3.5 2.8 1.6c.8.5.8 1.6 0 2.1l-2.9 1.6-2.8-2.7zM4.8 1.8c.4-.1.8 0 1.2.2l11 6.3-2.7 2.7z"/></svg>`,ios:`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9s-2-.9-3.4-.9c-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6s1.8-.8 3.3-.8 2 .8 3.4.8 2.2-1.3 3.1-2.5c1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.1M13.9 4.9c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.1 1.1.1 2.3-.6 3-1.5"/></svg>`};
+function storeBadge(a,kind){const u=safeUrl(a[kind]);if(!u)return "";return `<a class="store-b" href="${esc(u)}" target="_blank" rel="noopener" data-appuse="m:${esc(a.id)}">${STORE_GLYPH[kind]}<span><small>${kind==="android"?tx("حمّله من","Get it on"):tx("حمّله من","Download on the")}</small>${kind==="android"?"Google Play":"App Store"}</span></a>`}
+function mobileCard(a){const badges=storeBadge(a,"android")+storeBadge(a,"ios");return `<article class="mapp" style="--c:${esc(a.color||"#0A8BA0")}"><div class="mapp-ic"><img src="assets/brand/sindbad-symbol.svg" alt=""></div><div class="mapp-t"><div class="mapp-h"><h3>${esc(L(a,"name"))}</h3>${L(a,"audience")?`<span class="chip">${esc(L(a,"audience"))}</span>`:""}</div><p>${esc(L(a,"desc"))}</p><div class="mapp-b">${badges||`<span class="chip w">${tx("رابط التحميل قريبًا","Download link coming soon")}</span>`}</div></div></article>`}
 function systemCard(a){const u=safeUrl(a.url);return `<a class="appc" ${appAttrs(a)}><span class="ic" style="background:${esc(a.color)}">${I(a.icon)}</span><div style="min-width:0"><h3>${esc(L(a,"name"))}</h3><p>${esc(L(a,"desc"))}</p><span class="system-destination">${a.internal?tx("داخل البوابة","Inside the portal"):u?tx("يفتح في تبويب جديد","Opens in a new tab"):tx("الرابط غير متاح بعد","Link not available yet")}</span></div><span class="x">${I(u?"ext":"arrow",u?"":"flip")}</span></a>`}
 VIEWS.apps=()=>{const all=apps(),primary=all.filter(a=>["sindflow","ayun","company-dashboard","project-manager","odoo","training"].includes(a.id)),other=all.filter(a=>!primary.includes(a));return `<div class="ph"><div><h1>${tx("الأنظمة والتطبيقات","Systems & apps")}</h1><p>${tx("كل أداة في مكانها. اختر النظام المناسب لمهمتك.","Every tool in one place. Choose the right system for your task.")}</p></div></div>
  <div class="appg">${primary.map(systemCard).join("")}</div>
  <p class="systems-note">${I("shield")}<span>${tx("كل نظام يفتح بحسابه وصلاحياته الخاصة. Dashboard هو نظام إدارة الشركة؛ لوحة تحكم هذه البوابة متاحة للمسؤولين من قائمة الحساب.","Each system uses its own account and permissions. Dashboard is the company administration system; this portal’s control panel is available to staff from the account menu.")}</span></p>
+ ${(()=>{const m=mobileApps();return m.length?`<div class="sh" id="mobile-apps"><div><h2>${tx("تطبيقات السندباد للجوال","Sindbad mobile apps")}</h2><p>${tx("تطبيقات الشركة المنشورة على المتاجر. شارك روابطها مع العملاء عند الحاجة.","The company’s published apps. Share their links with customers when needed.")}</p></div></div><div class="mapps">${m.map(mobileCard).join("")}</div>`:""})()}
  ${other.length?`<div class="sh"><div><h2>${tx("روابط وخدمات إضافية","More links & services")}</h2></div></div><div class="appg">${other.map(systemCard).join("")}</div>`:""}`};
 
 /* ---- TRAINING HUB ---- */
@@ -1739,6 +1744,7 @@ function pindex(){const it=[];
  it.push({i:"edit",c:"#2F9E57",l:tx("رسالة جديدة","New message"),kw:"mail email بريد رسالة compose",k:tx("البريد","Mail"),a:()=>compose()});
  SB.DEPTS.forEach(d=>it.push({i:"mail",c:d.c,l:tx("راسل ","Message ")+(AR()?d.ar:d.en),kw:d.k+"@ "+d.en,k:tx("البريد","Mail"),a:()=>compose(d.k+"@"+SB.domain())}));
  docs().forEach(d=>it.push({i:"file",c:(CATS[d.cat]||CATS.other).c,l:L(d,"title"),kw:[d.desc_ar,d.desc_en,d.title_en,d.title_ar].join(" "),k:tx("مستند","Document"),a:()=>openDoc(d.id)}));
+ mobileApps().forEach(a=>{const u=safeUrl(a.android)||safeUrl(a.ios);if(u)it.push({i:"grid",c:a.color||"#0A8BA0",l:L(a,"name"),kw:[a.name_en,a.name_ar,a.desc_ar,a.desc_en,"app تطبيق جوال mobile"].join(" "),k:tx("تطبيق جوال","Mobile app"),a:()=>openUrl(u)})});
  apps().forEach(a=>it.push({i:a.icon,c:a.color,l:L(a,"name"),kw:a.name_en+a.name_ar,k:tx("نظام","System"),a:()=>openApp(a.id)}));
  Object.keys(SB.REQ_TYPES).forEach(k=>it.push({i:RT(k).i,c:RT(k).c,l:AR()?RT(k).ar:RT(k).en,kw:RT(k).en,k:tx("طلب","Request"),a:()=>openSvc(k)}));
  myReqs().forEach(r=>it.push({i:RT(r.type).i,c:RT(r.type).c,l:reqTitle(r)+" · "+r.no,kw:r.no,k:tx("طلباتي","My request"),a:()=>openMyReq(r.id)}));
@@ -1835,7 +1841,7 @@ SB.on((k,local)=>{
  if(!S.me)return;
  if(k==="c:users"){S.me=SB.auth.current("portal");if(!S.me){toast(tx("انتهت جلستك.","Your session ended."));renderShell();renderView(false);return}}
  if(k==="c:messages"&&!local){const n=unread();if(n>(S._lastUnread||0))toast(tx("وصلتك رسالة جديدة","New message received"));S._lastUnread=n}
- const map={"c:news":["home","news","training"],"c:docs":["home","library","training"],"c:apps":["home","apps","training"],"c:branches":["company"],"c:reminders":["home"],"c:leaders":["company"],"cfg:company":["company"],"cfg:contact":["company"],"cfg:eotm":["home"],"cfg:settings":["home","requests"],"c:requests":["home","requests","profile"],"c:messages":["mail","profile","home"],"c:users":["profile","directory","home"]};
+ const map={"c:news":["home","news","training"],"c:docs":["home","library","training"],"c:apps":["home","apps","training"],"c:mobile":["apps"],"c:branches":["company"],"c:reminders":["home"],"c:leaders":["company"],"cfg:company":["company"],"cfg:contact":["company"],"cfg:eotm":["home"],"cfg:settings":["home","requests"],"c:requests":["home","requests","profile"],"c:messages":["mail","profile","home"],"c:users":["profile","directory","home"]};
  if(!local||k==="c:messages"||k==="c:requests"||k==="c:users")refresh(...(map[k]||[]));
 });
 

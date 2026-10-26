@@ -530,3 +530,23 @@ body.hub-open .tabbar{display:none!important}
 :root[data-theme="dark"] .qs .qa .ci{color:color-mix(in srgb,var(--c) 60%,#fff);background:color-mix(in srgb,var(--c) 22%,transparent)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .qs .qa .ci{color:color-mix(in srgb,var(--c) 60%,#fff);background:color-mix(in srgb,var(--c) 22%,transparent)}}
 :root[data-theme="dark"] .qs>a.qa:hover .ci{color:#fff;background:var(--c)}
+
+/* Systems page: mobile apps */
+.mapps{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:16px;margin-bottom:36px}
+.mapp{display:flex;gap:18px;align-items:flex-start;padding:22px;border-radius:22px;background:var(--surface);border:1px solid var(--line)}
+.mapp-ic{width:64px;height:64px;flex-shrink:0;border-radius:18px;display:grid;place-items:center;background:linear-gradient(150deg,var(--c),color-mix(in srgb,var(--c) 55%,#04161A));box-shadow:0 14px 26px -14px var(--c)}
+.mapp-ic img{width:34px;height:34px;filter:brightness(0) invert(1)}
+.mapp-t{min-width:0;flex:1}
+.mapp-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mapp-h h3{margin:0;font-size:18px;font-weight:600}
+.mapp-t p{margin:8px 0 16px;font-size:14px;line-height:1.75;color:var(--muted)}
+.mapp-b{display:flex;gap:10px;flex-wrap:wrap}
+.store-b{display:inline-flex;align-items:center;gap:10px;height:46px;padding:0 16px 0 14px;border-radius:12px;background:#111;color:#fff;text-decoration:none;direction:ltr;transition:transform .2s,background .2s}
+.store-b:hover{background:#000;transform:translateY(-1px)}
+.store-b:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+.store-b svg{width:20px;height:20px;flex-shrink:0}
+.store-b span{display:grid;line-height:1.15;text-align:left;font-size:15px;font-weight:600}
+.store-b small{font-size:10px;font-weight:400;opacity:.8}
+:root[data-theme="dark"] .store-b{background:#fff;color:#111}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .store-b{background:#fff;color:#111}}
+@media (max-width:520px){.mapp{flex-direction:column;gap:14px}}
