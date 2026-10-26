@@ -503,6 +503,42 @@
     saveAll("mobile", old.concat(MOBILE_APPS.filter(a => !have.has(a.id)).map(a => ({ ...a, createdAt: now(), updatedAt: now() }))));
     write("seeded", { ...read("seeded", {}), mobileApps: 1 });
   }
+  /* ---------- read acknowledgements (policies & manuals) ----------
+     A doc with requireAck:true must be confirmed by every active employee.
+     Records live in "acks" and are append-only: there is no API to undo one.
+     ackRev on the doc is bumped when its content changes; older acks then count as outdated. */
+  const ACK_DOCS = ["handbook", "sales", "manager"];
+  function migrateAcks() {
+    const seeded = read("seeded", {});
+    if (seeded.acks === 1) return;
+    saveAll("docs", list("docs").map(d => ACK_DOCS.includes(d.id) && d.requireAck === undefined ? { ...d, requireAck: true, ackRev: d.ackRev || 1 } : d));
+    write("seeded", { ...read("seeded", {}), acks: 1 });
+  }
+  function ackStatus(userId, docOrId) {
+    const d = typeof docOrId === "string" ? get("docs", docOrId) : docOrId;
+    if (!d || !d.requireAck) return { required: false };
+    const rev = d.ackRev || 1;
+    const mine = list("acks").filter(a => a.userId === userId && a.docId === d.id).sort((a, b) => b.at - a.at);
+    const cur = mine.find(a => a.rev === rev);
+    return { required: true, signed: !!cur, at: cur ? cur.at : null, outdated: !cur && mine.length > 0, rev };
+  }
+  async function signAck(userId, docId, pw) {
+    const u = get("users", userId), d = get("docs", docId);
+    if (!u || !d || !d.requireAck) throw err("invalid");
+    if (!pw || (await hash(pw, u.salt)) !== u.password) throw err("password");
+    const st = ackStatus(userId, d);
+    if (st.signed) return list("acks").find(a => a.userId === userId && a.docId === docId && a.rev === st.rev);
+    const rec = { id: uid(), userId, email: u.email, name_ar: u.name_ar || "", name_en: u.name_en || "", docId, rev: st.rev, title_ar: d.title_ar || "", title_en: d.title_en || "", at: now() };
+    const arr = list("acks"); arr.push(rec); saveAll("acks", arr);
+    log(u.email, "doc_ack", d.title_en || d.title_ar || docId);
+    return rec;
+  }
+  function ackReport(docId) {
+    const d = get("docs", docId); if (!d) return null;
+    const rev = d.ackRev || 1, acks = list("acks").filter(a => a.docId === docId && a.rev === rev);
+    const people = list("users").filter(u => u.status === "active").map(u => { const a = acks.find(x => x.userId === u.id); return { id: u.id, email: u.email, name_ar: u.name_ar, name_en: u.name_en, branch: u.branch, dept: u.dept, at: a ? a.at : null }; });
+    return { rev, total: people.length, signed: people.filter(p => p.at).length, people };
+  }
   function migrateSystems() {
     const seeded = read("seeded", {});
     if (seeded.systemsCatalog === 1) return;
@@ -653,11 +689,13 @@
     await seed(true);
     migrateSystems();
     migrateMobile();
+    migrateAcks();
   }
   function exportAll() {
     const o = { v: 2, at: now(), systemsCatalog: read("seeded", {}).systemsCatalog || 0, cfg: {}, cols: {} };
     COLS.forEach(c => o.cols[c] = list(c));
     o.cols.mobile = list("mobile");
+    o.cols.acks = list("acks");
     ["settings", "company", "contact", "eotm", "seq"].forEach(k => o.cfg[k] = cfg(k, null));
     return o;
   }
@@ -669,12 +707,13 @@
     return transaction(()=>{
       COLS.forEach(c => write("c:" + c, o.cols[c]));
       if (Array.isArray(o.cols.mobile) && o.cols.mobile.every(x => x && typeof x.id === "string")) write("c:mobile", o.cols.mobile);
+      if (Array.isArray(o.cols.acks) && o.cols.acks.every(x => x && typeof x.id === "string")) write("c:acks", o.cols.acks);
       ["settings","company","contact","eotm","seq"].forEach(k=>{if(o.cfg[k]!=null)setCfg(k,o.cfg[k])});
-      write("seeded", { at: now(), v: 2, systemsCatalog: o.systemsCatalog === 1 ? 1 : 0, mobileApps: Array.isArray(o.cols.mobile) ? 1 : 0 });
+      write("seeded", { at: now(), v: 2, systemsCatalog: o.systemsCatalog === 1 ? 1 : 0, mobileApps: Array.isArray(o.cols.mobile) ? 1 : 0, acks: 1 });
     });
   }
 
-  const ready = seed(false).then(migrateSystems).then(migrateMobile).catch(e => console.error("seed", e));
+  const ready = seed(false).then(migrateSystems).then(migrateMobile).then(migrateAcks).catch(e => console.error("seed", e));
 
   global.SB = {
     ready, DOMAIN, DEPTS, ROLES, REQ_TYPES, STATUS, domain, addr,
@@ -685,6 +724,7 @@
     mail: { send, threads, thread, markThread, unread, reply, replyRecipients },
     req: { create: createRequest, decide, cancel: cancelRequest, summarize, workingDays },
     files: { put: filePut, get: fileGet, cached: fileCached, del: fileDel },
+    acks: { status: ackStatus, sign: signAck, report: ackReport },
     reset, exportAll, importAll, uid
   };
 })(window);
