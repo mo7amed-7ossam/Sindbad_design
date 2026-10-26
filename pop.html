@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sindbad App Prompt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pop.css">
+</head>
+<body>
+
+<!-- ============ Sindbad app prompt: copy from here ============ -->
+<div class="sbp" id="sbAppPrompt" role="dialog" aria-modal="true" aria-labelledby="sbpTitle" aria-describedby="sbpDesc" hidden>
+  <div class="sbp-backdrop" data-sbp-browser aria-hidden="true"></div>
+
+  <div class="sbp-card">
+    <button type="button" class="sbp-close" data-sbp-browser aria-label="Close and continue in browser">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+
+    <div class="sbp-icon" aria-hidden="true">
+      <img src="assets/brand/sindbad-symbol.svg" alt="">
+    </div>
+
+    <h2 id="sbpTitle">Get the Sindbad app</h2>
+    <p id="sbpDesc">Requests, mail and attendance in one place, with a notification the moment something changes.</p>
+
+    <div class="sbp-actions">
+      <button type="button" class="sbp-btn sbp-primary" data-sbp-download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+        <span>Download the app</span>
+      </button>
+      <button type="button" class="sbp-btn sbp-secondary" data-sbp-browser>Continue in browser</button>
+    </div>
+
+    <p class="sbp-status" id="sbpStatus" role="status"></p>
+
+    <label class="sbp-remember"><input type="checkbox" id="sbpRemember"><span>Don’t show this again</span></label>
+  </div>
+</div>
+<!-- ============ Sindbad app prompt: copy until here ============ -->
+
+<!-- Preview page only: always show the prompt here. Do not copy this line. -->
+<script>window.SindbadAppPromptConfig = { alwaysShow: true };</script>
+<button type="button" data-sbp-open style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 18px;border-radius:10px;border:1px solid #ccd;background:#fff;font:500 14px system-ui;cursor:pointer">Show the prompt again</button>
+<script src="pop.js"></script>
+</body>
+</html>

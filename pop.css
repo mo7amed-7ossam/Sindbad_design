@@ -1,0 +1,67 @@
+/* Sindbad app prompt (pop.css). Every rule is scoped under .sbp.
+   Brand: Deep #08343B, Sea #0A8BA0, Aqua #70CDDD, Lime #CFDD28. */
+.sbp{
+  --sbp-deep:#08343B;--sbp-sea:#0A8BA0;--sbp-aqua:#70CDDD;--sbp-lime:#CFDD28;
+  --sbp-ink:#122A2E;--sbp-muted:#62777B;--sbp-line:rgba(18,42,46,.1);
+  --sbp-ease:cubic-bezier(.2,.8,.2,1);
+  --sbp-font:"Alexandria","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  position:fixed;inset:0;z-index:2147483000;width:100%;height:100vh;height:100dvh;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  font-family:var(--sbp-font);font-size:15px;line-height:1.55;color:var(--sbp-ink);direction:ltr;text-align:center;
+  -webkit-font-smoothing:antialiased;opacity:0;visibility:hidden;transition:opacity .3s var(--sbp-ease),visibility 0s linear .3s
+}
+.sbp *,.sbp *::before,.sbp *::after{box-sizing:border-box}
+.sbp[hidden]{display:flex}
+.sbp.is-open{opacity:1;visibility:visible;transition:opacity .3s var(--sbp-ease),visibility 0s}
+.sbp:focus{outline:none}
+html.sbp-lock,html.sbp-lock body{overflow:hidden}
+
+.sbp-backdrop{position:absolute;inset:0;background:rgba(4,22,26,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+
+.sbp-card{position:relative;width:100%;max-width:380px;padding:36px 28px 24px;border-radius:24px;background:#fff;
+  box-shadow:0 1px 2px rgba(8,52,59,.06),0 30px 60px -20px rgba(4,22,26,.45);
+  transform:translateY(12px) scale(.98);transition:transform .35s var(--sbp-ease)}
+.sbp.is-open .sbp-card{transform:none}
+
+.sbp-close{position:absolute;top:12px;right:12px;width:34px;height:34px;padding:0;border:0;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;background:transparent;color:var(--sbp-muted);transition:background .2s,color .2s}
+.sbp-close svg{width:16px;height:16px;display:block}
+.sbp-close:hover{background:#F1F5F5;color:var(--sbp-ink)}
+
+.sbp-icon{width:64px;height:64px;margin:0 auto 20px;border-radius:18px;display:grid;place-items:center;background:var(--sbp-deep);
+  box-shadow:0 12px 24px -12px rgba(8,52,59,.6)}
+.sbp-icon img{width:34px;height:34px;display:block;filter:brightness(0) invert(1)}
+
+.sbp-card h2{margin:0 0 8px;font-weight:500;font-size:22px;line-height:1.3;letter-spacing:-.01em;color:var(--sbp-ink)}
+.sbp-card>p{margin:0 auto 24px;max-width:30ch;font-size:14.5px;color:var(--sbp-muted)}
+
+.sbp-actions{display:grid;gap:8px}
+.sbp-btn{appearance:none;border:0;margin:0;font:inherit;cursor:pointer;width:100%;height:48px;border-radius:12px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500;transition:background .2s,color .2s}
+.sbp-btn svg{width:18px;height:18px;display:block}
+.sbp-btn[hidden]{display:none}
+.sbp-primary{background:var(--sbp-sea);color:#fff}
+.sbp-primary:hover{background:#087C8F}
+.sbp-secondary{background:transparent;color:var(--sbp-ink);box-shadow:inset 0 0 0 1px var(--sbp-line)}
+.sbp-secondary:hover{background:#F4F7F7}
+
+.sbp-status{margin:10px 0 0;min-height:0;font-size:12.5px;color:var(--sbp-muted)}
+.sbp-status:empty{display:none}
+
+.sbp-remember{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding-top:16px;width:100%;justify-content:center;
+  border-top:1px solid var(--sbp-line);font-size:13px;color:var(--sbp-muted);cursor:pointer}
+.sbp-remember input{width:15px;height:15px;margin:0;accent-color:var(--sbp-sea)}
+
+.sbp :focus-visible{outline:2px solid var(--sbp-sea);outline-offset:2px}
+
+@media (max-width:480px){
+  .sbp{align-items:flex-end;padding:0}
+  .sbp-card{max-width:none;border-radius:24px 24px 0 0;padding:32px 22px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%)}
+}
+@media (prefers-color-scheme:dark){
+  .sbp{--sbp-ink:#E7F1F2;--sbp-muted:#93ABAF;--sbp-line:rgba(255,255,255,.12)}
+  .sbp-card{background:#10262A}
+  .sbp-close:hover,.sbp-secondary:hover{background:rgba(255,255,255,.06)}
+  .sbp-icon{background:var(--sbp-sea)}
+}
+@media (prefers-reduced-motion:reduce){.sbp,.sbp-card{transition:none}}

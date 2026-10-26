@@ -857,8 +857,8 @@ body.guest .hdr,body.guest .foot,body.guest::before{display:none}
 <script src="assets/js/store.js"></script>
 <script>
 const BL="";
-const CATS={policies:{c:"#0A8BA0",ar:"اللوائح",en:"Policies"},sales:{c:"#077585",ar:"المبيعات",en:"Sales"},roles:{c:"#4FA9B8",ar:"المهام الوظيفية",en:"Job roles"},forms:{c:"#383837",ar:"النماذج",en:"Forms"},training:{c:"#F26B21",ar:"التدريب",en:"Training"},brand:{c:"#9CAA12",ar:"الهوية",en:"Brand"},other:{c:"#6B7E82",ar:"أخرى",en:"Other"}};
-const NCATS={general:{c:"#0A8BA0",ar:"عام",en:"General"},hr:{c:"#7B61C9",ar:"الموارد البشرية",en:"HR"},sales:{c:"#077585",ar:"المبيعات",en:"Sales"},training:{c:"#F26B21",ar:"التدريب",en:"Training"},celebrate:{c:"#9CAA12",ar:"تهنئة",en:"Celebration"}};
+const CATS={references:{c:"#B07A4A",ar:"كتب ومراجع",en:"Books & references"},policies:{c:"#0A8BA0",ar:"اللوائح",en:"Policies"},sales:{c:"#077585",ar:"المبيعات",en:"Sales"},roles:{c:"#4FA9B8",ar:"المهام الوظيفية",en:"Job roles"},forms:{c:"#383837",ar:"النماذج",en:"Forms"},training:{c:"#F26B21",ar:"التدريب",en:"Training"},brand:{c:"#9CAA12",ar:"الهوية",en:"Brand"},other:{c:"#6B7E82",ar:"أخرى",en:"Other"}};
+const NCATS={training_oppein:{c:"#F26B21",ar:"تدريب OPPEIN",en:"OPPEIN training"},training_sindbad:{c:"#0A8BA0",ar:"تدريبات السندباد",en:"Sindbad training"},training_external:{c:"#7B61C9",ar:"تدريبات خارجية",en:"External training"},general:{c:"#0A8BA0",ar:"عام",en:"General"},hr:{c:"#7B61C9",ar:"الموارد البشرية",en:"HR"},sales:{c:"#077585",ar:"المبيعات",en:"Sales"},training:{c:"#F26B21",ar:"التدريب",en:"Training"},celebrate:{c:"#9CAA12",ar:"تهنئة",en:"Celebration"}};
 /* ================= state ================= */
 const S={lang:"ar",view:"home",me:null,libCat:"all",libQ:"",libMode:"grid",tab:{},newsCat:"all",calc:"late",step:0,seenNews:0,mbox:"inbox",mthread:null,mq:"",reqFilter:"all",authMode:"login",pendFiles:{}};
 try{S.lang=localStorage.getItem("sb_lang")||"ar";S.libMode=localStorage.getItem("sb_lib")||"grid";S.seenNews=+localStorage.getItem("sb_seen")||0;const th=localStorage.getItem("sb_theme");if(th)document.documentElement.dataset.theme=th}catch(e){}
@@ -919,7 +919,7 @@ function waves(){let p="";const W=2400;for(let i=0;i<24;i++){const y=14+i*22;let
 const fileUrl=u=>{if(!u)return"";if(String(u).startsWith("idb:"))return SB.files.cached(u);return safeUrl(u)};
 const byOrder=(a,b)=>(a.order||99)-(b.order||99);
 const docs=()=>SB.list("docs").slice().sort(byOrder);
-const apps=()=>SB.list("apps").slice().sort(byOrder);
+const apps=()=>SB.list("apps").filter(a=>a.group!=="training").sort(byOrder);
 const news=()=>SB.list("news").filter(n=>!n.draft).sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.at||b.createdAt)-(a.at||a.createdAt));
 const branches=()=>SB.list("branches").slice().sort(byOrder);
 const reminders=()=>{const r=SB.list("reminders").slice().sort(byOrder);return r.length?r:[{img:"team",title_ar:"أهلًا بك في السندباد",title_en:"Welcome to Sindbad",sub_ar:"",sub_en:"",go:"library:"}]};
@@ -938,9 +938,9 @@ const fsize=b=>b>1048576?(b/1048576).toFixed(1)+" MB":Math.max(1,Math.round(b/10
 
 /* ================= navigation ================= */
 const IMG={kitchen:"assets/images/kitchen.jpg",wardrobe:"assets/images/wardrobe.jpg",living:"assets/images/living.jpg",shelves:"assets/images/shelves.jpg",bedroom:"assets/images/bedroom.jpg",team:"assets/images/team.webp",onboarding:"assets/images/onboarding.webp",design:"assets/images/design.webp",leadership:"assets/images/leadership.webp",workspace:"assets/images/workspace.webp"};
-const CIMG={policies:"workspace",sales:"design",roles:"leadership",forms:"workspace",training:"onboarding",brand:"kitchen",other:"workspace"};
-const NIMG={general:"team",hr:"onboarding",sales:"design",training:"leadership",celebrate:"team"};
-const BANNER={directory:"team",news:"team",apps:"workspace",library:"onboarding",policies:"workspace",sales:"design",requests:"workspace",brand:"kitchen",mail:"team",profile:"onboarding"};
+const CIMG={references:"workspace",policies:"workspace",sales:"design",roles:"leadership",forms:"workspace",training:"onboarding",brand:"kitchen",other:"workspace"};
+const NIMG={training_oppein:"onboarding",training_sindbad:"leadership",training_external:"workspace",general:"team",hr:"onboarding",sales:"design",training:"leadership",celebrate:"team"};
+const BANNER={training:"onboarding",directory:"team",news:"team",apps:"workspace",library:"onboarding",policies:"workspace",sales:"design",requests:"workspace",brand:"kitchen",mail:"team",profile:"onboarding"};
 const SLIM={mail:1,profile:1,directory:1};
 const newsImg=n=>fileUrl(n.cover)||IMG[NIMG[n.cat]||"team"];
 const nimg=n=>`<img src="${esc(newsImg(n))}" ${n.cover&&String(n.cover).startsWith("idb:")?`data-ref="${esc(n.cover)}"`:""} alt="">`;
@@ -950,6 +950,7 @@ const NAV=[
  {k:"directory",i:"users",ar:"الزملاء",en:"People"},
  {k:"apps",i:"grid",ar:"الأنظمة",en:"Systems"},
  {k:"library",i:"folder",ar:"المكتبة",en:"Library"},
+ {k:"training",i:"cap",ar:"التدريب",en:"Training"},
  {k:"news",i:"bell",ar:"الأخبار",en:"News",more:true},
  {k:"policies",i:"shield",ar:"اللوائح",en:"Policies",more:true},
  {k:"sales",i:"chart",ar:"المبيعات",en:"Sales",more:true},
@@ -1038,20 +1039,28 @@ function todayInfo(){
  return `<div class="tstate ${st}"><i></i><span>${big}</span></div><p class="tsub">${sub}</p>`;
 }
 const ROLES=[
- {img:"onboarding",t:["موظف جديد","New joiner"],s:["أول أسبوع لك في السندباد","Your first week at Sindbad"],it:[["doc:handbook",["اقرأ دليل الموظف ووقّع إقرار الاستلام","Read the handbook and sign the acknowledgment"]],["go:mail",["افتح بريدك الرسمي في البوابة","Open your official mailbox"]],["go:apps",["فعّل حسابك على منصة تدريب OPPEIN","Activate your OPPEIN training account"]],["go:company",["تعرّف على الهيكل التنظيمي والفروع","Learn the structure and branches"]]]},
+ {img:"onboarding",t:["موظف جديد","New joiner"],s:["أول أسبوع لك في السندباد","Your first week at Sindbad"],it:[["doc:handbook",["اقرأ دليل الموظف ووقّع إقرار الاستلام","Read the handbook and sign the acknowledgment"]],["go:mail",["افتح بريدك الرسمي في البوابة","Open your official mailbox"]],["go:training",["فعّل حسابك على منصة تدريب OPPEIN","Activate your OPPEIN training account"]],["go:company",["تعرّف على الهيكل التنظيمي والفروع","Learn the structure and branches"]]]},
  {img:"design",t:["المبيعات والتصميم","Sales & design"],s:["من أول اتصال حتى التسليم الفني","From first call to technical handover"],it:[["tab:sales:cycle",["مراحل دورة المبيعات الست ومددها","The six sales stages and their timings"]],["tab:sales:pipe",["مراحل الـ Pipeline وحالات Odoo","Pipeline stages and Odoo statuses"]],["tab:sales:transfer",["تحويل العملاء بين الفروع والعمولة","Client transfers and commission split"]],["tab:sales:comm",["احسب عمولتك التقديرية","Estimate your commission"]]]},
  {img:"leadership",t:["مدير الفريق","Team manager"],s:["متابعة الفريق والمعرض والأهداف","Team, showroom and targets"],it:[["doc:manager",["مهام ومسؤوليات مدير الفريق","Team manager duties"]],["tab:sales:kpi",["مؤشرات الأداء وأهداف التقييم الربع سنوي","KPIs and quarterly targets"]],["tab:policies:penalty",["جزاءات الحضور والسلّم التصاعدي","Attendance penalties and escalation"]],["tab:policies:perf",["التقييم والزيادة السنوية","Evaluation and annual increase"]]]},
  {img:"workspace",t:["كل الموظفين","Every employee"],s:["حقوقك والتزاماتك اليومية","Your daily rights and duties"],it:[["tab:policies:hours",["ساعات الدوام وتسجيل الحضور","Working hours and attendance"]],["tab:policies:leave",["الإجازات ومواعيد تقديم الطلب","Leave and request deadlines"]],["doc:forms",["نماذج الإجازة والانصراف والسلفة","Leave, exit and advance forms"]],["tab:policies:conduct",["السرية والمظهر والسلوك المهني","Confidentiality, dress and conduct"]]]}
 ];
 function actAttr(a){const[k,...r]=a.split(":");return k==="doc"?`data-doc="${r[0]}"`:k==="req"?`data-req="${r[0]}"`:k==="go"?`data-go="${r[0]}"`:`data-gotab="${r.join(":")}"`}
-function appAttrs(a){if(!a)return `href="#apps" data-go="apps"`;if(a.internal==="mail")return `href="#mail" data-go="mail"`;const u=safeUrl(a.url);return u?`href="${esc(u)}" target="_blank" rel="noopener"`:`href="#apps" data-app="${esc(a.id)}"`}
+function appAttrs(a){if(!a)return `href="#apps" data-go="apps"`;const t=` data-appuse="${esc(a.id)}"`;if(["mail","training"].includes(a.internal))return `href="#${a.internal}" data-go="${a.internal}"`+t;const u=safeUrl(a.url);return (u?`href="${esc(u)}" target="_blank" rel="noopener"`:`href="#apps" data-app="${esc(a.id)}"`)+t}
+/* ---- app usage: ranks the "most used apps" strip on the home page (per user, this browser) ---- */
+const APP_DEFAULT_RANK=["sindflow","odoo","mail","project-manager","training","ayun","company-dashboard","elearn","web","map"];
+const APP_SHORT={sindflow:["المهام والمتابعة","Tasks & follow-up"],odoo:["العملاء والمحاسبة","Customers & accounting"],mail:["بريدك الرسمي","Your work mail"],"project-manager":["إدارة المشاريع","Projects"],training:["المنصات والأدلة","Platforms & guides"],ayun:["سيارات النقل","Delivery fleet"],"company-dashboard":["الإدارة الداخلية","Internal admin"],elearn:["بث وتسجيلات","Live & replays"],web:["الموقع الرسمي","Public website"],map:["مواقع الفروع","Branch locations"]};
+function appUseKey(){return "sbx:appUse:"+(S.me&&S.me.id||"guest")}
+function appUse(){try{return JSON.parse(localStorage.getItem(appUseKey())||"{}")||{}}catch(_){return {}}}
+function bumpApp(id){if(!id||!S.me)return;const u=appUse();u[id]=(u[id]||0)+1;try{localStorage.setItem(appUseKey(),JSON.stringify(u))}catch(_){}}
+function topApps(n){const u=appUse(),rank=id=>{const i=APP_DEFAULT_RANK.indexOf(id);return i<0?99:i};return apps().filter(a=>a.id!=="attendance").sort((a,b)=>(u[b.id]||0)-(u[a.id]||0)||rank(a.id)-rank(b.id)).slice(0,n)}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-appuse]");if(t)bumpApp(t.dataset.appuse)},true);
 VIEWS.home=()=>{
   S.slide=S.slide||0;const REMS=reminders();if(S.slide>=REMS.length)S.slide=0;
   const now=new Date(),hr=now.getHours(),g=AR()?(hr<12?"صباح الخير":"مساء الخير"):(hr<12?"Good morning":hr<17?"Good afternoon":"Good evening");
   const first=(uname(S.me)||"").trim().split(/\s+/)[0];
   const N=news(),D=docs().slice(0,4),items=myReqs();
-  const A=apps(),odoo=A.find(a=>a.id==="odoo")||{id:"odoo",name_ar:"نظام المبيعات",name_en:"Sales system"},att=A.find(a=>a.id==="attendance")||{id:"attendance",name_ar:"الحضور",name_en:"Attendance"};
-  const qs=[["cal","#0A8BA0",["طلب إجازة","Leave request"],["قبل شهرين للسنوية","2 months ahead"],`data-req="leave"`],["exit","#7B61C9",["إذن انصراف","Exit permission"],["بموافقة المدير","Manager approval"],`data-req="exit"`],["coin","#B07A4A",["سلفة مالية","Salary advance"],["أقساط من الراتب","Repaid from salary"],`data-req="advance"`],["mail","#2F9E57",["راسل الإدارة","Message management"],["عبر بريدك الرسمي","Via your official mail"],`data-compose="management"`],["finger","#083E46",[L(att,"name"),L(att,"name")],["تسجيل الحضور","Clock in"],appAttrs(att)],["chart","#714B67",[L(odoo,"name"),L(odoo,"name")],["CRM والمبيعات","CRM & sales"],appAttrs(odoo)]];
+  const A=apps(),odoo=A.find(a=>a.id==="odoo")||{id:"odoo",name_ar:"نظام المبيعات",name_en:"Sales system"},tasks=A.find(a=>a.id==="sindflow");
+  const qs=topApps(6);
   const E=SB.cfg("eotm",null),eo=E&&(E.name_ar||E.name_en)?E:null;const pend=items.filter(r=>["pending","review"].includes(r.status)).length;
   const feat=N[0],rest=N.slice(1,4);
   return `
@@ -1067,7 +1076,7 @@ VIEWS.home=()=>{
    <aside class="pray today" aria-live="polite"><h3>${tx("دوام اليوم","Today at work")}</h3><div id="todayBody">${todayInfo()}</div>
     <ul class="trules"><li>${I("clock")}<span>${tx(`8 ساعات عمل ضمن الفترة من ${hourLabel(workHours()[0])} إلى ${hourLabel(workHours()[1])}`,`8 working hours between ${hourLabel(workHours()[0])} and ${hourLabel(workHours()[1])}`)}</span></li><li>${I("finger")}<span>${tx("الحضور والانصراف بالبصمة أو تطبيق السندباد فقط","Clock in and out by fingerprint or the Sindbad app only")}</span></li><li>${I("exit")}<span>${tx("الخروج أثناء الدوام يحتاج إذنًا مسبقًا من مديرك","Leaving during hours needs your manager’s prior permission")}</span></li></ul>
     ${pend?`<button class="tpend" data-go="requests"><span>${tx(`لديك ${pend} طلب قيد المراجعة`,`${pend} request${pend>1?"s":""} under review`)}</span>${I("arrow","flip").replace("<svg",'<svg style="width:16px;height:16px"')}</button>`:""}
-    <a class="btn tbtn" ${appAttrs(att)}>${I("finger")}${safeUrl(att.url)?tx("افتح تطبيق الحضور","Open the attendance app"):tx("إعداد رابط الحضور","Attendance link setup")}</a></aside>
+    <button class="btn tbtn" data-gotab="policies:hours">${I("clock")}${tx("تفاصيل الدوام والحضور","Hours & attendance details")}</button></aside>
    </div>
    <div class="wrap hbar"><div class="hbin">
     <div class="cap" id="cap">${capHTML(S.slide)}</div>
@@ -1077,7 +1086,7 @@ VIEWS.home=()=>{
   </section>
 
   ${myWorkspace()}
-  <div class="wrap"><div class="qs">${qs.map(([i,c,t,s,at])=>`<${at.startsWith("href")?"a":"button"} ${at}><span class="ci" style="background:${c}">${I(i)}</span><span><b>${esc(P(t))}</b><span class="s">${P(s)}</span></span></${at.startsWith("href")?"a":"button"}>`).join("")}</div></div>
+  <div class="wrap"><section class="qs" aria-labelledby="qsT"><header class="qs-h"><h2 id="qsT">${tx("التطبيقات الأكثر استخدامًا","Most used apps")}</h2><a href="#apps" data-go="apps">${tx("كل الأنظمة","All systems")}${I("arrow","flip")}</a></header>${qs.map(a=>{const sh=APP_SHORT[a.id],ext=!!safeUrl(a.url)&&!a.internal;return `<a class="qa" ${appAttrs(a)} style="--c:${esc(a.color||"#0A8BA0")}"><span class="ci">${I(a.icon||"grid")}</span><span class="qt"><b>${esc(L(a,"name"))}</b><span class="s">${sh?P(sh):esc(L(a,"desc"))}</span></span>${ext?`<span class="qx" aria-hidden="true">${I("ext")}</span>`:""}</a>`}).join("")}</section></div>
 
   <section class="sec"><div class="wrap">
    <div class="sh"><div><h2>${tx("آخر الأخبار","Latest news")}</h2><p>${tx("قرارات الإدارة وإعلانات الموارد البشرية والفروع.","Decisions from management, HR and the branches.")}</p></div><button class="more" data-go="news">${tx("كل الأخبار","All news")}${I("arrow")}</button></div>
@@ -1111,10 +1120,11 @@ const NAVG=[
  {k:"home",i:"home",ar:"الرئيسية",en:"Home"},
  {g:"me",ar:"مساحتي",en:"My space",items:["mail","requests","profile"]},
  {g:"co",ar:"الشركة",en:"Company",items:["news","directory","company","brand"]},
- {g:"kn",ar:"المعرفة",en:"Knowledge",items:["library","policies","sales"]},
+ {g:"kn",ar:"المعرفة",en:"Knowledge",items:["training","library","policies","sales"]},
  {k:"apps",i:"grid",ar:"الأنظمة",en:"Systems"}
 ];
 const NAVI={
+ training:{i:"cap",ar:"التدريب",en:"Training",d:["المنصات والأدلة وأخبار التدريب","Learning platforms, guides and updates"]},
  mail:{i:"mail",ar:"البريد",en:"Mail",d:["بريدك الرسمي ومحادثاتك","Your official mail and threads"]},
  requests:{i:"inbox",ar:"طلباتي",en:"My requests",d:["قدّم طلبًا وتابع اعتماده","Submit and track approvals"]},
  profile:{i:"user",ar:"حسابي",en:"My account",d:["بياناتك وكلمة المرور","Your details and password"]},
@@ -1125,7 +1135,7 @@ const NAVI={
  library:{i:"folder",ar:"المكتبة",en:"Library",d:["الأدلة والنماذج المعتمدة","Approved manuals and forms"]},
  policies:{i:"shield",ar:"اللوائح",en:"Policies",d:["الدوام والإجازات والجزاءات","Hours, leave and penalties"]},
  sales:{i:"chart",ar:"مركز المبيعات",en:"Sales hub",d:["دورة البيع والعمولة","Sales cycle and commission"]},
- home:{i:"home",ar:"الرئيسية",en:"Home",d:["",""]},apps:{i:"grid",ar:"الأنظمة",en:"Systems",d:["روابط Odoo والحضور والتدريب","Odoo, attendance and training links"]}
+ home:{i:"home",ar:"الرئيسية",en:"Home",d:["",""]},apps:{i:"grid",ar:"الأنظمة",en:"Systems",d:["المهام والمشاريع والعملاء والنقل والتدريب","Tasks, projects, customers, fleet and training"]}
 };
 const navCount=(k,mu,pend)=>k==="mail"?mu:k==="requests"?pend:0;
 const navLbl=k=>AR()?NAVI[k].ar:NAVI[k].en;
@@ -1213,12 +1223,57 @@ VIEWS.news=()=>{
 };
 /* ---- APPS ---- */
 /* ---- APPS ---- */
-VIEWS.apps=()=>`<div class="ph"><div><h1>${tx("الأنظمة والتطبيقات","Systems & apps")}</h1><p>${tx("ادخل إلى كل نظام تعمل عليه من مكان واحد.","Open every system you work in from one place.")}</p></div>${false?`<button class="btn o" data-go="admin" data-atab="apps">${I("edit")}${tx("إدارة الروابط","Manage links")}</button>`:""}</div>
-  <div class="appg">${apps().map(a=>{const u=safeUrl(a.url);return `<a class="appc" ${appAttrs(a)}><span class="ic" style="background:${esc(a.color)}">${I(a.icon)}</span><div style="min-width:0"><h3>${esc(L(a,"name"))}</h3><p>${esc(L(a,"desc"))}</p>${u||a.internal?"":`<span class="chip w" style="margin-top:10px">${tx("الرابط قريبًا","Link coming")}</span>`}</div>${u?`<span class="x">${I("ext")}</span>`:a.internal?`<span class="x">${I("arrow","flip")}</span>`:""}</a>`}).join("")}</div>
-  <div class="two" style="margin-top:22px">
-   <div class="card"><div class="ch"><h3>${tx("حضور تدريب OPPEIN من المتصفح","Join OPPEIN training on the web")}</h3><span class="chip">Web</span></div>${steps(AR()?["افتح المنصة من Chrome واحفظ الرابط في المفضلة.","أدخل الحساب وكلمة المرور من مسؤول المبيعات في المقر، ووافق على سياسة الخصوصية.","من تبويب Learning تظهر مهام التدريب، ويُرسل المقر الرابط قبل البدء.","اضغط Watch the livestream، واستخدم Hand up للتحدث مع المدرب.","التسجيلات تظهر لاحقًا بعلامة Playback Available."]:["Open the platform in Chrome and bookmark it.","Sign in with the account from the HQ sales contact and accept the privacy policy.","Training tasks appear under Learning; HQ also sends the link.","Choose Watch the livestream; use Hand up to talk to the trainer.","Replays appear later as Playback Available."])}</div>
-   <div class="card"><div class="ch"><h3>${tx("حضور التدريب من الجوال","Join training from your phone")}</h3><span class="chip">App</span></div>${steps(AR()?["ثبّت تطبيق Yunxuetang (绚星云学习) من رمز QR في الدليل.",`أدخل النطاق oppein.yunxuetang.cn ثم التالي.`,"سجّل الدخول مرة واحدة فقط بنفس الحساب.","افتح التدريب من تبويب Learn أو امسح رمز QR الذي يرسله المقر."]:["Install the Yunxuetang app from the QR code in the guide.","Enter the domain oppein.yunxuetang.cn and continue.","Sign in once with the same account.","Open the training under Learn, or scan the QR code HQ sends."])}<button class="btn s sm" data-doc="elearn" style="margin-top:6px">${I("file")}${tx("الدليل المصوّر","Illustrated guide")}</button></div>
-  </div>`;
+function systemCard(a){const u=safeUrl(a.url);return `<a class="appc" ${appAttrs(a)}><span class="ic" style="background:${esc(a.color)}">${I(a.icon)}</span><div style="min-width:0"><h3>${esc(L(a,"name"))}</h3><p>${esc(L(a,"desc"))}</p><span class="system-destination">${a.internal?tx("داخل البوابة","Inside the portal"):u?tx("يفتح في تبويب جديد","Opens in a new tab"):tx("الرابط غير متاح بعد","Link not available yet")}</span></div><span class="x">${I(u?"ext":"arrow",u?"":"flip")}</span></a>`}
+VIEWS.apps=()=>{const all=apps(),primary=all.filter(a=>["sindflow","ayun","company-dashboard","project-manager","odoo","training"].includes(a.id)),other=all.filter(a=>!primary.includes(a));return `<div class="ph"><div><h1>${tx("الأنظمة والتطبيقات","Systems & apps")}</h1><p>${tx("كل أداة في مكانها. اختر النظام المناسب لمهمتك.","Every tool in one place. Choose the right system for your task.")}</p></div></div>
+ <div class="appg">${primary.map(systemCard).join("")}</div>
+ <p class="systems-note">${I("shield")}<span>${tx("كل نظام يفتح بحسابه وصلاحياته الخاصة. Dashboard هو نظام إدارة الشركة؛ لوحة تحكم هذه البوابة متاحة للمسؤولين من قائمة الحساب.","Each system uses its own account and permissions. Dashboard is the company administration system; this portal’s control panel is available to staff from the account menu.")}</span></p>
+ ${other.length?`<div class="sh"><div><h2>${tx("روابط وخدمات إضافية","More links & services")}</h2></div></div><div class="appg">${other.map(systemCard).join("")}</div>`:""}`};
+
+/* ---- TRAINING HUB ---- */
+const TRAINING_TABS=[
+ ["oppein","تدريب OPPEIN","OPPEIN training"],
+ ["sindbad","تدريبات السندباد","Sindbad training"],
+ ["external","تدريبات خارجية","External training"],
+ ["references","كتب ومراجع","Books & references"]
+];
+function trainingCategory(n){
+ if(String(n.cat||"").startsWith("training_"))return n.cat.slice(9);
+ // Keep the existing OPPEIN announcement in its destination; general training stays internal.
+ if(n.cat==="training")return /oppein/i.test((n.title_ar||"")+" "+(n.title_en||""))?"oppein":"sindbad";
+ return "";
+}
+const TRAINING_META={
+ oppein:{i:"cap",c:"#F26B21",ar:"منصة المصنع: جلسات مباشرة وتسجيلات واختبارات.",en:"The factory platform: live sessions, replays and tests."},
+ sindbad:{i:"users",c:"#0A8BA0",ar:"ورش وتدريبات داخلية لفريق السندباد.",en:"In-house workshops for the Sindbad team."},
+ external:{i:"globe",c:"#7B61C9",ar:"دورات وفرص من جهات خارج الشركة.",en:"Courses and opportunities from outside providers."},
+ references:{i:"folder",c:"#B07A4A",ar:"كتب وأدلة للقراءة والرجوع إليها.",en:"Books and guides to read and refer to."}
+};
+function trainingRefs(){return docs().filter(d=>["training","references"].includes(d.cat))}
+function trainingCount(k){return k==="references"?trainingRefs().length:news().filter(n=>trainingCategory(n)===k).length}
+function trainingNews(items){return `<div class="tr-feed">${items.map((n,i)=>{const ex=String(L(n,"body")||"").replace(/\s+/g," ").trim();return `<article class="tr-item ${i===0?"lead":""}" data-news="${esc(n.id)}" tabindex="0"><div class="tr-media">${nimg(n)}</div><div class="tr-txt"><span class="tr-date">${I("cal")}${fdate(nAt(n))}</span><h3>${esc(L(n,"title"))}</h3>${ex?`<p>${esc(ex.length>(i===0?220:120)?ex.slice(0,i===0?220:120)+"…":ex)}</p>`:""}<span class="tr-more">${tx("التفاصيل","Read more")}${I("arrow","flip")}</span></div></article>`}).join("")}</div>`}
+function trainingEmpty(k){const m=TRAINING_META[k];return `<div class="tr-empty"><span class="tr-empty-ic" style="--c:${m.c}">${I(m.i)}</span><h3>${k==="sindbad"?tx("لا توجد تدريبات داخلية منشورة الآن","No in-house training is published yet"):k==="external"?tx("لا توجد تدريبات خارجية منشورة الآن","No external training is published yet"):tx("لا توجد كتب أو مراجع مضافة الآن","No books or references have been added yet")}</h3><p>${tx("عندك موضوع تحتاج تتدرب عليه، أو كتاب تنصح به زملاءك؟ راسل قسم التدريب والتطوير.","Is there a topic you want training on, or a book to recommend? Message Training & Development.")}</p><button class="btn o" data-compose="training">${I("mail")}${tx("راسل قسم التدريب","Message the training team")}</button></div>`}
+VIEWS.training=()=>{
+ const tab=TRAINING_TABS.some(t=>t[0]===S.tab.training)?S.tab.training:"oppein",label=TRAINING_TABS.find(t=>t[0]===tab),meta=TRAINING_META[tab];
+ const updates=news().filter(n=>trainingCategory(n)===tab),platform=SB.get("apps","elearn"),guide=docs().find(d=>d.id==="elearn");
+ const web=AR()?["افتح المنصة من Chrome واحفظ الرابط في المفضلة.","أدخل الحساب وكلمة المرور من مسؤول المبيعات في المقر، ووافق على سياسة الخصوصية.","من تبويب Learning تظهر مهام التدريب، ويرسل المقر الرابط قبل البدء.","اضغط Watch the livestream، واستخدم Hand up للتحدث مع المدرب."]:["Open the platform in Chrome and bookmark it.","Sign in with the account from the HQ sales contact and accept the privacy policy.","Training tasks appear under Learning; HQ also sends the link.","Choose Watch the livestream; use Hand up to talk to the trainer."];
+ const phone=AR()?["ثبّت تطبيق Yunxuetang من رمز QR في الدليل.","أدخل النطاق oppein.yunxuetang.cn ثم التالي.","سجّل الدخول مرة واحدة بنفس الحساب.","افتح التدريب من تبويب Learn أو امسح رمز QR الذي يرسله المقر."]:["Install the Yunxuetang app from the QR code in the guide.","Enter the domain oppein.yunxuetang.cn and continue.","Sign in once with the same account.","Open training under Learn, or scan the QR code HQ sends."];
+ const stepList=a=>`<ol class="tr-steps">${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`;
+ let body="";
+ if(tab==="oppein"){
+  body=`<section class="tr-hero"><div class="tr-hero-txt"><span class="tr-badge">OPPEIN</span><h2>${tx("منصة OPPEIN للتدريب","OPPEIN learning platform")}</h2><p>${tx("كل جلسات المصنع المباشرة وتسجيلاتها ومهام التدريب والاختبارات في مكان واحد. الحساب يصلك من مسؤول المبيعات في المقر.","Every live factory session, its replay, training tasks and tests in one place. Your account comes from the HQ sales contact.")}</p><div class="tr-hero-acts">${platform?`<a class="btn l" ${appAttrs(platform)}>${I("ext")}${tx("دخول المنصة","Open the platform")}</a>`:""}${guide?`<button class="btn g" data-doc="elearn">${I("file")}${tx("الدليل المصوّر","Illustrated guide")}</button>`:""}</div></div>
+   <div class="tr-how"><div class="tr-how-col"><h4>${I("globe")}${tx("من المتصفح","On the web")}</h4>${stepList(web)}</div><div class="tr-how-col"><h4>${I("finger")}${tx("من الجوال","On your phone")}</h4>${stepList(phone)}</div></div></section>
+  <div class="tr-sec-h"><h2>${tx("جديد تدريب OPPEIN","OPPEIN updates")}</h2>${updates.length?`<span>${tx(`${updates.length} إعلان`,`${updates.length} updates`)}</span>`:""}</div>${updates.length?trainingNews(updates):`<div class="card"><p class="muted" style="margin:0">${tx("لا توجد إعلانات جديدة من OPPEIN الآن. مواعيد الجلسات تُعلن هنا وفي البريد.","No new OPPEIN announcements right now. Session dates are announced here and by mail.")}</p></div>`}`;
+ }else if(tab==="references"){
+  const refs=trainingRefs();
+  body=`<div class="tr-sec-h"><h2>${tx("كتب ومراجع","Books & references")}</h2>${refs.length?`<span>${tx(`${refs.length} مرجع`,`${refs.length} items`)}</span>`:""}</div>${refs.length?`<div class="docs">${refs.map(docCard).join("")}</div>`:trainingEmpty(tab)}`;
+ }else{
+  body=`<div class="tr-sec-h"><h2>${tx(label[1],label[2])}</h2>${updates.length?`<span>${tx(`${updates.length} تدريب`,`${updates.length} trainings`)}</span>`:""}</div>${updates.length?trainingNews(updates):trainingEmpty(tab)}`;
+ }
+ return `<div class="ph"><div><h1>${tx("مركز التدريب","Training hub")}</h1><p>${tx("تدريبات OPPEIN والسندباد والجهات الخارجية، ومراجع للقراءة.","OPPEIN, Sindbad and external training, plus books to read.")}</p></div></div>
+ <div class="tr-picker" role="tablist" aria-label="${tx("أقسام التدريب","Training categories")}">${TRAINING_TABS.map(([k,ar,en])=>{const m=TRAINING_META[k],n=trainingCount(k);return `<button type="button" role="tab" class="tr-pick ${tab===k?"on":""}" aria-selected="${tab===k}" data-tab="training:${k}" style="--c:${m.c}"><span class="tr-pick-ic">${I(m.i)}</span><span class="tr-pick-t"><b>${tx(ar,en)}</b><small>${tx(m.ar,m.en)}</small></span><em>${n||"–"}</em></button>`}).join("")}</div>
+ <div id="trainingContent" class="tr-body">${body}</div>
+ <aside class="tr-help"><span>${I("mail")}</span><div><b>${tx("تحتاج مساعدة في التدريب؟","Need help with training?")}</b><p>${tx("للحسابات، والمواعيد، واقتراح تدريب جديد.","For accounts, schedules or suggesting new training.")}</p></div><button class="btn s" data-compose="training">${tx("راسل قسم التدريب","Email the training team")}</button></aside>`;
+};
 function steps(a){return `<div style="display:grid;gap:12px">${a.map((s,i)=>`<div style="display:flex;gap:12px;align-items:flex-start"><span style="width:26px;height:26px;border-radius:50%;background:var(--soft);color:var(--soft-ink);display:grid;place-items:center;font-size:12.5px;font-weight:600;flex-shrink:0">${i+1}</span><span style="font-size:14px">${esc(s)}</span></div>`).join("")}</div>`}
 /* ---- LIBRARY ---- */
 /* ---- LIBRARY ---- */
@@ -1695,7 +1750,7 @@ function rPal(){const q=$("#palQ").value.trim().toLowerCase();PI=pindex().filter
  const s=$("#palL .sel");if(s)s.scrollIntoView({block:"nearest"})}
 function openPal(){if(!S.me)return;$("#palQ").value="";$("#palQ").placeholder=tx("ابحث عن دليل، نظام، طلب، لائحة…","Search manuals, systems, requests, policies…");PS=0;rPal();$("#pal").showModal();paint($("#pal"));$("#palQ").focus()}
 function runPal(n){const i=PI[n];if(!i)return;$("#pal").close();setTimeout(i.a,50)}
-function openApp(id){const a=apps().find(x=>x.id===id)||{name_ar:id==="attendance"?"تطبيق الحضور":"النظام",name_en:id==="attendance"?"Attendance":"System"};if(a.internal==="mail")return go("mail");const u=safeUrl(a.url);if(u)openUrl(u);else drawer(L(a,"name"),`<div class="empty">${I("grid")}<h3>${tx("الرابط غير متاح بعد","Link not available yet")}</h3><p>${tx("لم يتم إعداد رابط هذا النظام. اطلب الرابط من التقنية لتكمل مهمتك.","This system link has not been configured. Ask Technology for access to continue.")}</p></div>`,`<button class="btn o" data-dclose>${tx("إغلاق","Close")}</button><button class="btn p" data-compose="it" data-subject="${esc(tx("طلب رابط: ","Request access: ")+L(a,"name"))}">${I("mail")}${tx("اطلب الرابط من التقنية","Ask Technology")}</button>`)}
+function openApp(id){const a=SB.get("apps",id)||{name_ar:id==="attendance"?"تطبيق الحضور":"النظام",name_en:id==="attendance"?"Attendance":"System"};if(["mail","training"].includes(a.internal))return go(a.internal);const u=safeUrl(a.url);if(u)openUrl(u);else drawer(L(a,"name"),`<div class="empty">${I("grid")}<h3>${tx("الرابط غير متاح بعد","Link not available yet")}</h3><p>${tx("لم يتم إعداد رابط هذا النظام. اطلب الرابط من التقنية لتكمل مهمتك.","This system link has not been configured. Ask Technology for access to continue.")}</p></div>`,`<button class="btn o" data-dclose>${tx("إغلاق","Close")}</button><button class="btn p" data-compose="it" data-subject="${esc(tx("طلب رابط: ","Request access: ")+L(a,"name"))}">${I("mail")}${tx("اطلب الرابط من التقنية","Ask Technology")}</button>`)}
 function openNews(id){const n=news().find(x=>x.id===id);if(!n)return;const c=NCATS[n.cat]||NCATS.general;drawer(L(n,"title"),`<div style="border-radius:18px;overflow:hidden;aspect-ratio:16/8;margin-bottom:18px">${nimg(n).replace("<img",'<img style="width:100%;height:100%;object-fit:cover"')}</div><div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><span class="chip" style="background:${c.c}1f;color:${c.c}">${AR()?c.ar:c.en}</span><span class="chip n">${fdate(nAt(n))}</span></div><div style="font-size:16px;line-height:1.9;white-space:pre-line" id="nbody"></div>`);$("#nbody").textContent=L(n,"body")}
 
 /* ================= events ================= */
@@ -1733,7 +1788,7 @@ document.addEventListener("click",async e=>{
  if(x=q("[data-app]")){e.preventDefault();openApp(x.dataset.app);return}
  if(x=q("[data-news]")){openNews(x.dataset.news);return}
  if(x=q("[data-req]")){openSvc(x.dataset.req);return}
- if(x=q("[data-tab]")){const[v,t]=x.dataset.tab.split(":");S.tab[v]=t;renderView(false);return}
+ if(x=q("[data-tab]")){const[v,t]=x.dataset.tab.split(":");S.tab[v]=t;renderView(false);if(v==="training")document.querySelector(`[data-tab="training:${t}"]`)?.focus({preventScroll:true});return}
  if(x=q("[data-ncat]")){S.newsCat=x.dataset.ncat;renderView(false);return}
  if(x=q("[data-lcat]")){S.libCat=x.dataset.lcat;renderView(false);return}
  if(x=q("[data-lmode]")){S.libMode=x.dataset.lmode;try{localStorage.setItem("sb_lib",S.libMode)}catch(_){}renderView(false);return}
@@ -1780,7 +1835,7 @@ SB.on((k,local)=>{
  if(!S.me)return;
  if(k==="c:users"){S.me=SB.auth.current("portal");if(!S.me){toast(tx("انتهت جلستك.","Your session ended."));renderShell();renderView(false);return}}
  if(k==="c:messages"&&!local){const n=unread();if(n>(S._lastUnread||0))toast(tx("وصلتك رسالة جديدة","New message received"));S._lastUnread=n}
- const map={"c:news":["home","news"],"c:docs":["home","library"],"c:apps":["home","apps"],"c:branches":["company"],"c:reminders":["home"],"c:leaders":["company"],"cfg:company":["company"],"cfg:contact":["company"],"cfg:eotm":["home"],"cfg:settings":["home","requests"],"c:requests":["home","requests","profile"],"c:messages":["mail","profile","home"],"c:users":["profile","directory","home"]};
+ const map={"c:news":["home","news","training"],"c:docs":["home","library","training"],"c:apps":["home","apps","training"],"c:branches":["company"],"c:reminders":["home"],"c:leaders":["company"],"cfg:company":["company"],"cfg:contact":["company"],"cfg:eotm":["home"],"cfg:settings":["home","requests"],"c:requests":["home","requests","profile"],"c:messages":["mail","profile","home"],"c:users":["profile","directory","home"]};
  if(!local||k==="c:messages"||k==="c:requests"||k==="c:users")refresh(...(map[k]||[]));
 });
 

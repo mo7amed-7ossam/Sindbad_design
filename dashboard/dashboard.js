@@ -74,9 +74,9 @@ const roleChip=r=>{const x=SB.ROLES[r]||SB.ROLES.employee;return `<span class="c
 const ustChip=s=>s==="active"?`<span class="chip g"><i class="d"></i>${tx("نشط","Active")}</span>`:s==="pending"?`<span class="chip w"><i class="d"></i>${tx("بانتظار التفعيل","Pending")}</span>`:`<span class="chip n"><i class="d"></i>${tx("موقوف","Disabled")}</span>`;
 const branchNames=()=>SB.list("branches").slice().sort((a,b)=>(a.order||99)-(b.order||99)).map(b=>b.name_ar).concat("المقر الرئيسي");
 const emptyBox=(i,t,s)=>`<div class="empty"><div class="ill">${I(i)}</div><b>${t}</b>${s?`<span class="sm">${s}</span>`:""}</div>`;
-const NCATS={general:{c:"#0A8BA0",ar:"عام",en:"General"},hr:{c:"#7B61C9",ar:"الموارد البشرية",en:"HR"},sales:{c:"#077585",ar:"المبيعات",en:"Sales"},training:{c:"#F26B21",ar:"التدريب",en:"Training"},celebrate:{c:"#9CAA12",ar:"تهنئة",en:"Celebration"}};
-const CATS={policies:{c:"#0A8BA0",ar:"اللوائح",en:"Policies"},sales:{c:"#077585",ar:"المبيعات",en:"Sales"},roles:{c:"#4FA9B8",ar:"المهام الوظيفية",en:"Job roles"},forms:{c:"#383837",ar:"النماذج",en:"Forms"},training:{c:"#F26B21",ar:"التدريب",en:"Training"},brand:{c:"#9CAA12",ar:"الهوية",en:"Brand"},other:{c:"#6B7E82",ar:"أخرى",en:"Other"}};
-const NIMG={general:"team",hr:"onboarding",sales:"design",training:"leadership",celebrate:"team"};
+const NCATS={training_oppein:{c:"#F26B21",ar:"تدريب OPPEIN",en:"OPPEIN training"},training_sindbad:{c:"#0A8BA0",ar:"تدريبات السندباد",en:"Sindbad training"},training_external:{c:"#7B61C9",ar:"تدريبات خارجية",en:"External training"},general:{c:"#0A8BA0",ar:"عام",en:"General"},hr:{c:"#7B61C9",ar:"الموارد البشرية",en:"HR"},sales:{c:"#077585",ar:"المبيعات",en:"Sales"},training:{c:"#F26B21",ar:"التدريب",en:"Training"},celebrate:{c:"#9CAA12",ar:"تهنئة",en:"Celebration"}};
+const CATS={references:{c:"#B07A4A",ar:"كتب ومراجع",en:"Books & references"},policies:{c:"#0A8BA0",ar:"اللوائح",en:"Policies"},sales:{c:"#077585",ar:"المبيعات",en:"Sales"},roles:{c:"#4FA9B8",ar:"المهام الوظيفية",en:"Job roles"},forms:{c:"#383837",ar:"النماذج",en:"Forms"},training:{c:"#F26B21",ar:"التدريب",en:"Training"},brand:{c:"#9CAA12",ar:"الهوية",en:"Brand"},other:{c:"#6B7E82",ar:"أخرى",en:"Other"}};
+const NIMG={training_oppein:"onboarding",training_sindbad:"leadership",training_external:"workspace",general:"team",hr:"onboarding",sales:"design",training:"leadership",celebrate:"team"};
 const byOrder=(a,b)=>(a.order||99)-(b.order||99);
 
 /* ---------- data views ---------- */
@@ -102,24 +102,35 @@ function badge(k){if(k==="mail")return unreadAll();if(k==="requests")return open
 function isDark(){const h=document.documentElement;return h.dataset.theme==="dark"||(!h.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches)}
 
 function shell(){
+  if(D.sideOpen)closeSide();
   const h=document.documentElement;h.lang=D.lang;h.dir=AR()?"rtl":"ltr";
   if(!D.me){$("#root").innerHTML=loginView();return}
   const R=SB.ROLES[D.me.role];
   $("#root").innerHTML=`<div class="app ${D.mini?"mini":""}" id="app">
-  <aside class="side" id="side"><div class="waves">${waves()}</div>
-   <div class="sb-top">${logo()}<img class="sym" src="../assets/brand/sindbad-symbol.svg" alt="Sindbad"><span class="tag">DASHBOARD</span></div>
+  <aside class="side" id="side" role="dialog" aria-modal="true" aria-label="${tx("القائمة","Menu")}" aria-hidden="true" inert><div class="waves">${waves()}</div>
+   <div class="sb-top">${logo()}<img class="sym" src="../assets/brand/sindbad-symbol.svg" alt="Sindbad"><button class="ds-side-close" data-closemenu aria-label="${tx("إغلاق القائمة","Close menu")}">${I("close")}</button></div>
    <nav id="snav" aria-label="${tx("القائمة","Navigation")}"></nav>
    <div class="sb-foot"><div class="ucard">${av(D.me,38)}<div class="nfo"><b>${esc(uname(D.me))}</b><small>${AR()?R.ar:R.en}</small></div><button data-logout title="${tx("تسجيل الخروج","Sign out")}" aria-label="${tx("تسجيل الخروج","Sign out")}">${I("exit")}</button></div></div>
   </aside>
   <div class="main"><header class="top" id="top">
-   <button class="ib menu" data-menu aria-label="${tx("القائمة","Menu")}">${I("menu")}</button>
-   <button class="ib mini" data-mini aria-label="${tx("طي القائمة","Collapse sidebar")}">${I("side")}</button>
+   <div class="tbar">
+    <button class="ib menu" data-menu aria-label="${tx("القائمة","Menu")}">${I("menu")}</button>
+    <a class="tlogo" href="#overview" data-go="overview" aria-label="Sindbad">${logo()}</a>
+    <nav class="tnav" id="tnav" aria-label="${tx("الأقسام","Sections")}"></nav>
+    <div class="tact">
+     <button class="ib" data-search aria-label="${tx("بحث","Search")}" title="${tx("بحث","Search")}">${I("search")}</button>
+     <button class="ib" data-lang aria-label="Language">${AR()?"EN":"ع"}</button>
+     <button class="ib" data-themebtn aria-label="Theme">${I(isDark()?"sun":"moon")}</button>
+     <button class="ib" data-go="${can("requests")?"requests":"mail"}" id="bell" aria-label="${tx("التنبيهات","Notifications")}">${I("bell")}<span class="dot" id="bdot" hidden></span></button>
+     <div class="tme"><button class="tav" data-meopen aria-haspopup="menu" aria-expanded="false" aria-label="${esc(uname(D.me))}">${av(D.me,40)}</button>
+      <div class="tmenu" id="tmenu" role="menu" hidden><div class="tmh">${av(D.me,44)}<div><b>${esc(uname(D.me))}</b><small>${AR()?R.ar:R.en}</small></div></div>
+       <a class="tmi" href="../index.html" target="_blank" rel="noopener">${I("eye")}${tx("عرض البوابة","View portal")}</a>
+       <button class="tmi" data-themebtn>${I(isDark()?"sun":"moon")}${isDark()?tx("الوضع الفاتح","Light mode"):tx("الوضع الداكن","Dark mode")}</button>
+       <button class="tmi" data-lang>${I("globe")}${AR()?"English":"العربية"}</button>
+       <button class="tmi out" data-logout>${I("exit")}${tx("تسجيل الخروج","Sign out")}</button></div></div>
+    </div>
+   </div>
    <div class="ttl"><div class="crumb">${tx("لوحة التحكم","Dashboard")}<span>/</span><span id="crumb"></span></div><h1 id="ttl"></h1></div>
-   <button class="srch" data-search>${I("search")}<span>${tx("ابحث عن موظف، طلب، خبر…","Search people, requests, news…")}</span></button>
-   <button class="ib" data-lang aria-label="Language">${AR()?"EN":"ع"}</button>
-   <button class="ib" data-themebtn aria-label="Theme">${I(isDark()?"sun":"moon")}</button>
-   <button class="ib" data-go="${can("requests")?"requests":"mail"}" id="bell" aria-label="${tx("التنبيهات","Notifications")}">${I("bell")}<span class="dot" id="bdot" hidden></span></button>
-   <a class="btn o hide-m" href="../index.html" target="_blank" rel="noopener">${I("eye")}${tx("عرض البوابة","View portal")}</a>
   </header><main class="content" id="view"></main></div></div>`;
   navRender();
   window.removeEventListener("scroll",onScroll);window.addEventListener("scroll",onScroll,{passive:true});
@@ -128,20 +139,23 @@ function navRender(){
   const n=$("#snav");if(!n)return;
   n.innerHTML=NAV.map(g=>{const its=g.it.filter(i=>allowed(i[3]));if(!its.length)return"";return (g.g?`<div class="grp">${P(g.g)}</div>`:"")+its.map(([k,ic,l,,a])=>{const b=badge(k);return `<button class="ni ${D.view===k?"on":""} ${b?"dot":""}" data-go="${k}" title="${P(l)}">${I(ic)}<span>${P(l)}</span>${b?`<em class="${a||""}">${b>99?"99+":b}</em>`:""}</button>`}).join("")}).join("");
   const bd=$("#bdot");if(bd)bd.hidden=!(openReqs().length&&can("requests"));
+  const tn=$("#tnav");if(tn){const gs=NAV.map(g=>({g:g.g,its:g.it.filter(i=>allowed(i[3]))})).filter(g=>g.its.length);
+   const pill=([k,ic,l])=>{const b=badge(k);return `<button class="npill ${D.view===k?"on":""}" data-go="${k}" ${D.view===k?'aria-current="page"':""}>${I(ic)}<span>${P(l)}</span>${b?`<em>${b>99?"99+":b}</em>`:""}</button>`};
+   tn.innerHTML=gs.map((g,gi)=>gi<=2||g.its.length<2?g.its.map(pill).join(""):(()=>{const on=g.its.some(i=>i[0]===D.view),cur=g.its.find(i=>i[0]===D.view);return `<div class="tdd"><button class="npill ${on?"on":""}" data-tdd aria-haspopup="menu" aria-expanded="false">${I((cur||g.its[0])[1])}<span>${on?P(cur[2]):P(g.g)}</span>${I("down","chev")}</button><div class="tddm" role="menu">${g.its.map(([k,ic,l])=>`<button class="tdi ${D.view===k?"on":""}" data-go="${k}" role="menuitem">${I(ic)}<span>${P(l)}</span></button>`).join("")}</div></div>`})()).join("")}
 }
 function onScroll(){const t=$("#top");if(t)t.classList.toggle("sc",window.scrollY>4)}
 function go(v,replace=false){if(!VIEWS[v]||!navItems().some(i=>i[0]===v))v="overview";D.view=v;if(v!=="mail")D.mthread=null;try{if(location.hash!=="#"+v)history[replace?"replaceState":"pushState"](null,"","#"+v)}catch(e){}closeSide();render(true);window.scrollTo({top:0,behavior:"instant"})}
 function render(anim){
   if(!D.me){shell();return}
   if(!$("#view"))shell();
-  $("#ttl").textContent=TITLE(D.view);$("#crumb").textContent=TITLE(D.view);
+  $("#ttl").textContent=TITLE(D.view);$("#crumb").textContent=TITLE(D.view);{const ap=$("#app");if(ap)ap.dataset.view=D.view}
   const el=$("#view");el.classList.remove("view-enter");el.innerHTML=VIEWS[D.view]();
   if(anim){void el.offsetWidth;el.classList.add("view-enter")}
   (AFTER[D.view]||(()=>{}))();navRender();
 }
 function softRender(){if($("#drawer").classList.contains("open")){navRender();return}const y=window.scrollY;render(false);window.scrollTo({top:y,behavior:"instant"})}
-function openSide(){$("#app").classList.add("open");$("#scrim").classList.add("on")}
-function closeSide(){const a=$("#app");if(a)a.classList.remove("open");if(!$("#drawer").classList.contains("open"))$("#scrim").classList.remove("on")}
+function openSide(){if(D.sideOpen)return;D.sideOpen=true;D.sideFocus=document.activeElement;D.sideOverflow=document.body.style.overflow;$("#app").classList.add("open");$("#scrim").classList.add("on");$("#side").inert=false;$("#side").setAttribute("aria-hidden","false");$(".main").inert=true;document.body.style.overflow="hidden";$("[data-closemenu]").focus()}
+function closeSide(){const a=$("#app");if(a)a.classList.remove("open");const side=$("#side"),main=$(".main");if(side){side.inert=true;side.setAttribute("aria-hidden","true")}if(main)main.inert=false;if(D.sideOpen){document.body.style.overflow=D.sideOverflow||"";D.sideOpen=false;if(D.sideFocus?.isConnected)D.sideFocus.focus()}if(!$("#drawer").classList.contains("open"))$("#scrim").classList.remove("on")}
 
 /* ---------- drawer / confirm / palette ---------- */
 function drawer(title,body,foot,o={}){$("#dTitle").textContent=title;$("#dSub").textContent=o.sub||"";$("#dBody").innerHTML=body;$("#dFoot").innerHTML=foot||"";$("#dFoot").hidden=!foot;$("#drawer").classList.toggle("wide",!!o.wide);$("#drawer").classList.add("open");$("#scrim").classList.add("on");$("#dClose").innerHTML=I("close");$("#dBody").scrollTop=0}
@@ -163,20 +177,39 @@ function runPal(n){const i=PI[n];if(!i)return;$("#pal").close();setTimeout(i.a,4
 
 /* ---------- login ---------- */
 const DEMO=[["admin","Admin@2026",["مدير النظام — كل الصلاحيات","Administrator — full access"]],["maryam.albalushi","Sindbad@2026",["الموارد البشرية — الطلبات والموظفون","HR — requests & people"]],["salim.alharthi","Sindbad@2026",["التقنية — الحسابات والأنظمة","IT — accounts & systems"]],["noura.alkindi","Sindbad@2026",["محررة المحتوى — الأخبار والمكتبة","Content editor — news & library"]]];
-function loginView(){return `<section class="login"><img src="${img("leadership")}" alt=""><div class="waves">${waves()}</div>
- <div class="ltop"><button class="ib" data-lang>${AR()?"EN":"ع"}</button><button class="ib" data-themebtn aria-label="Theme">${I(isDark()?"sun":"moon")}</button></div>
- <div class="lwrap"><div class="lbox"><div class="lg">${logo("color")}<span class="ltag">${tx("لوحة التحكم","Dashboard")}</span></div>
-  <h1>${tx("تسجيل الدخول","Sign in")}</h1><p>${tx("للموظفين الإداريين في السندباد.","For Sindbad admin staff.")}</p>
-  <form id="dlogin" novalidate><div id="derr"></div>
-   <div class="field"><label for="dE">${tx("البريد الإلكتروني","Work email")}</label><div class="inpg em" dir="ltr"><input class="inp" id="dE" autocomplete="username" placeholder="name" spellcheck="false"><span class="suf">@${esc(SB.domain())}</span></div></div>
-   <div class="field"><div class="lrow"><label for="dP">${tx("كلمة المرور","Password")}</label><button type="button" class="lnk" data-forgot>${tx("نسيت كلمة المرور؟","Forgot password?")}</button></div><div class="inpg"><input class="inp ltr pw" id="dP" type="password" autocomplete="current-password"><button type="button" class="eye" data-dpw aria-label="${tx("إظهار كلمة المرور","Show password")}">${I("eye")}</button></div></div>
-   <label class="lrem"><input type="checkbox" checked>${tx("تذكرني على هذا الجهاز","Keep me signed in")}</label>
-   <button class="btn p lsub" type="submit">${tx("دخول","Sign in")}</button>
-  </form>
-  <details class="demo2"><summary>${tx("حسابات تجريبية بصلاحيات مختلفة","Demo accounts with different roles")}${I("down","","width:16px;height:16px")}</summary><div class="rows">${DEMO.map(([e,p,l])=>`<button type="button" data-demo="${e}|${p}"><span class="dav">${esc((e[0]||"").toUpperCase())}</span><span class="dtx"><b>${P(l)}</b><span class="ltr">${e}@${esc(SB.domain())}</span></span></button>`).join("")}</div><p class="dnote">${tx("بيانات وهمية للعرض فقط.","Sample data for preview only.")}</p></details>
- </div>
- <p class="lfoot">${tx("موظف وليس لديك حساب؟","Employee without an account?")} <a href="../index.html#register">${tx("سجّل من البوابة","Register on the portal")}</a></p></div></section>`}
-document.addEventListener("click",e=>{const t=e.target.closest("[data-dpw],.login [data-forgot]");if(!t)return;
+function loginView(){
+ const pend=SB.list("requests").filter(r=>["pending","review"].includes(r.status)).length,acts=SB.list("users").filter(u=>u.status==="active").length;
+ const wave=(y,a,ph)=>{let d="";for(let x=-300;x<=1100;x+=16){d+=(d?" L":"M")+x+" "+(y+a*Math.sin((x+ph)/160*Math.PI*2)).toFixed(1)}return d};
+ const lines=Array.from({length:16},(_,i)=>`<path pathLength="1" d="${wave(150+i*38,6+(i%4)*3,i*37)}" style="--i:${i}"/>`).join("");
+ return `<section class="signin">
+ <aside class="sg-art" aria-hidden="true">
+  <svg class="sg-w" viewBox="0 0 800 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="sgG" x1="0" x2="1"><stop offset="0" stop-color="#70CDDD"/><stop offset="1" stop-color="#0A8BA0"/></linearGradient></defs>${lines}</svg>
+  <div class="sg-top">${logo()}</div>
+  <div class="sg-card">
+   <div class="sg-ch"><span class="sg-dot"></span>${tx("اليوم في البوابة","Today on the portal")}</div>
+   <div class="sg-stats"><div><b class="tnum">${pend}</b><span>${tx("طلبات تنتظر القرار","requests awaiting a decision")}</span></div><div><b class="tnum">${acts}</b><span>${tx("موظفًا نشطًا","active employees")}</span></div></div>
+  </div>
+  <div class="sg-copy"><h2>${tx("مكان واحد لإدارة البوابة الداخلية للسندباد.","One place to run Sindbad’s internal portal.")}</h2><p>${tx("الطلبات، والبريد، والموظفون، وكل محتوى البوابة.","Requests, mail, people and every page of the portal.")}</p></div>
+ </aside>
+ <main class="sg-pane">
+  <div class="sg-bar"><a class="sg-back" href="../index.html">${I("arrow")}<span>${tx("العودة للبوابة","Back to portal")}</span></a><div class="sg-tools"><button class="sg-ib" data-lang aria-label="Language">${AR()?"EN":"ع"}</button><button class="sg-ib" data-themebtn aria-label="Theme">${I(isDark()?"sun":"moon")}</button></div></div>
+  <div class="sg-form">
+   <img class="sg-sym" src="../assets/brand/sindbad-symbol.svg" alt="">
+   <h1>${tx("تسجيل الدخول","Sign in")}</h1>
+   <p class="sg-sub">${tx("لوحة التحكم مخصصة للموظفين الإداريين.","The dashboard is for admin staff.")}</p>
+   <form id="dlogin" novalidate><div id="derr"></div>
+    <label class="sg-f"><span class="sg-l">${tx("البريد الإلكتروني","Work email")}</span><span class="sg-in sg-em" dir="ltr"><input id="dE" autocomplete="username" placeholder="name" spellcheck="false"><em>@${esc(SB.domain())}</em></span></label>
+    <div class="sg-f"><span class="sg-lr"><label class="sg-l" for="dP">${tx("كلمة المرور","Password")}</label><button type="button" class="sg-link" data-forgot>${tx("نسيت كلمة المرور؟","Forgot password?")}</button></span><span class="sg-in"><input id="dP" type="password" autocomplete="current-password" dir="ltr"><button type="button" class="sg-eye" data-dpw aria-label="${tx("إظهار كلمة المرور","Show password")}">${I("eye")}</button></span></div>
+    <label class="sg-rem"><input type="checkbox" checked><span>${tx("تذكرني على هذا الجهاز","Keep me signed in on this device")}</span></label>
+    <button class="sg-go" type="submit"><span>${tx("دخول","Sign in")}</span>${I("arrow","flip")}</button>
+   </form>
+   <div class="sg-or"><span>${tx("أو جرّب بحساب تجريبي","or try a demo account")}</span></div>
+   <div class="sg-demo">${DEMO.map(([e,p,l])=>{const [role,scope]=P(l).split(" — ");return `<button type="button" data-demo="${e}|${p}" title="${esc(e)}@${esc(SB.domain())}"><span class="sg-av">${esc((e[0]||"").toUpperCase())}</span><span class="sg-dt"><b>${esc(role)}</b><small>${esc(scope||"")}</small></span></button>`}).join("")}</div>
+  </div>
+  <p class="sg-foot">${tx("موظف جديد؟","New employee?")} <a href="../index.html#register">${tx("أنشئ حسابك من البوابة","Create your account on the portal")}</a></p>
+ </main>
+</section>`}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-dpw],.signin [data-forgot]");if(!t)return;
  if(t.matches("[data-dpw]")){const i=$("#dP");i.type=i.type==="password"?"text":"password";t.setAttribute("aria-pressed",i.type==="text")}
  else toast(tx("لإعادة تعيين كلمة المرور راسل قسم التقنية: it@","To reset your password, email IT: it@")+SB.domain())});
 async function doLogin(){const e=$("#dE").value.trim(),p=$("#dP").value,box=$("#derr");if(!e||!p){box.innerHTML=ferr(tx("أدخل البريد وكلمة المرور.","Enter email and password."));return}
@@ -207,38 +240,48 @@ function delta(arr){const a=arr.slice(-7).reduce((s,v)=>s+v,0),b=arr.slice(-14,-
 const ACT={login:["سجّل الدخول للبوابة","signed in to the portal","user","#62777B"],login_dash:["دخل لوحة التحكم","opened the dashboard","panel","#08343B"],register:["أنشأ حسابًا جديدًا","created an account","user","#0A8BA0"],request_new:["قدّم طلبًا","submitted a request","inbox","#0A8BA0"],request_approved:["اعتمد طلبًا","approved a request","check","#3E9B2F"],request_rejected:["رفض طلبًا","declined a request","close","#D93B41"],request_review:["حوّل طلبًا للمراجعة","moved a request to review","clock","#C98A12"],request_cancelled:["ألغى طلبًا","cancelled a request","close","#62777B"],request_pending:["أعاد فتح طلب","reopened a request","undo","#0A8BA0"],news_new:["نشر خبرًا","published news","bell","#7B61C9"],news_edit:["عدّل خبرًا","edited news","edit","#7B61C9"],news_del:["حذف خبرًا","deleted news","trash","#D93B41"],doc_new:["أضاف مستندًا","added a document","file","#383837"],doc_edit:["عدّل مستندًا","edited a document","file","#383837"],doc_del:["حذف مستندًا","deleted a document","trash","#D93B41"],app_new:["أضاف نظامًا","added a system","grid","#0A8BA0"],app_edit:["عدّل نظامًا","edited a system","grid","#0A8BA0"],app_del:["حذف نظامًا","deleted a system","trash","#D93B41"],branch_new:["أضاف فرعًا","added a branch","pin","#2F9E57"],branch_edit:["عدّل فرعًا","edited a branch","pin","#2F9E57"],branch_del:["حذف فرعًا","deleted a branch","trash","#D93B41"],reminder_new:["أضاف شريحة للرئيسية","added a home slide","home","#B07A4A"],reminder_edit:["عدّل شريحة الرئيسية","edited a home slide","home","#B07A4A"],reminder_del:["حذف شريحة","deleted a slide","trash","#D93B41"],reminder_order:["أعاد ترتيب الشرائح","reordered slides","home","#B07A4A"],eotm:["حدّث موظف الشهر","updated employee of the month","star","#9CAA12"],company:["عدّل صفحة الشركة","edited the company page","building","#08343B"],leader_edit:["عدّل القيادة","edited leadership","users","#08343B"],contact:["عدّل بيانات التواصل","edited contact details","phone","#08343B"],settings:["عدّل الإعدادات","changed settings","cog","#383837"],user_new:["أضاف موظفًا","added an employee","user","#0A8BA0"],user_edit:["عدّل بيانات موظف","edited an employee","user","#0A8BA0"],user_approve:["فعّل حسابًا","activated an account","check","#3E9B2F"],user_reject:["رفض تسجيلًا","rejected a registration","close","#D93B41"],user_del:["حذف حسابًا","deleted an account","trash","#D93B41"],password:["غيّر كلمة المرور","changed password","lock","#62777B"],reset_pw:["أعاد تعيين كلمة مرور","reset a password","key","#C98A12"],mail:["أرسل رسالة","sent a message","mail","#2F9E57"],broadcast:["أرسل تعميمًا لكل الموظفين","sent a staff-wide notice","megaphone","#E08A1E"]};
 function actRow(a){const x=ACT[a.action]||["قام بإجراء","did something","sparkle","#62777B"];return `<div class="fi"><span class="ic" style="background:${x[3]}">${I(x[2])}</span><p><b>${esc(dname(a.actor))}</b> ${P([x[0],x[1]])}${a.target?` <span class="${/[\u0600-\u06FF]/.test(a.target)?"":"mono "}muted">${esc(a.target)}</span>`:""}</p><time>${ago(a.at)}</time></div>`}
 VIEWS.overview=()=>{
- const me=D.me,hr=new Date().getHours(),first=uname(me).split(/\s+/)[0];
- const reqs=visReqs(),open=openReqs(),un=unreadAll(),users=SB.list("users"),act=users.filter(u=>u.status==="active"),pu=pendingUsers(),news=SB.list("news");
+ const hasR=can("requests"),hasE=can("employees"),hasC=can("content"),me=D.me,now=new Date();
+ const first=uname(me).split(/\s+/)[0],reqs=visReqs(),open=openReqs().sort((a,b)=>a.createdAt-b.createdAt),un=unreadAll();
+ const people=SB.users().filter(u=>u.status==="active"),pending=pendingUsers(),news=SB.list("news"),docs=SB.list("docs");
  const allMsgs=SB.list("messages").filter(m=>boxes().some(b=>m.to.includes(b)));
- const sR=series(reqs,14),sM=series(allMsgs,14,"at"),sU=series(users,14),sN=series(news.map(n=>({createdAt:n.at||n.createdAt})),14);
- const k=(go_,lbl,n,sp,c,ic,dl)=>`<div class="card kpi c3" data-go="${go_}" ${ic==="clock"?'data-pending-users="true"':""} tabindex="0" role="button"><div class="kb"><div class="kh"><span>${lbl}</span><span class="ic sm" style="background:${c}">${I(ic)}</span></div><b class="tnum">${n}</b>${dl}</div><div class="spark"><small>${sp.length?tx("الحركة خلال 14 يومًا","Activity over 14 days"):""}</small>${sp.length?spark(sp,c):""}</div></div>`;
- const kp=[];
- if(can("requests"))kp.push(k("requests",tx("طلبات مفتوحة","Open requests"),open.length,sR,"#0A8BA0","inbox",`<span class="muted sm">${tx("تحتاج متابعة الآن","Need follow-up now")}</span>`));
- kp.push(k("mail",tx("رسائل غير مقروءة","Unread messages"),un,sM,"#2F9E57","mail",`<span class="muted sm">${tx("محادثات في صناديقك","Conversations across your mailboxes")}</span>`));
- if(can("employees"))kp.push(k("employees",tx("موظفون نشطون","Active employees"),act.length,sU,"#7B61C9","users",pu.length?`<span class="delta" style="color:var(--warn)">${I("clock","","width:14px;height:14px")}${pu.length} ${tx("بانتظار التفعيل","awaiting activation")}</span>`:""));
- if(can("content"))kp.push(k(can("content")?"news":"overview",tx("أخبار منشورة","Published news"),news.filter(n=>!n.draft).length,sN,"#B07A4A","bell",delta(sN)));
- if(!can("content")&&can("employees"))kp.push(k("employees",tx("حسابات بانتظار التفعيل","Awaiting activation"),pu.length,[],"#C98A12","clock",`<span class="muted sm">${tx("راجع الحسابات الجديدة","Review new accounts")}</span>`));
- const byStatus=Object.entries(SB.STATUS).map(([s,x])=>({l:AR()?x.ar:x.en,v:reqs.filter(r=>r.status===s).length,c:{pending:"#C98A12",review:"#0A8BA0",approved:"#3E9B2F",rejected:"#D93B41",cancelled:"#9AAAAD"}[s]}));
- const br={};act.forEach(u=>{const b=u.branch||"—";br[b]=(br[b]||0)+1});const brs=Object.entries(br).sort((a,b)=>b[1]-a[1]).slice(0,7);const bmx=Math.max(1,...brs.map(b=>b[1]));
- const threads=boxes().flatMap(b=>SB.mail.threads(b,"inbox").map(t=>({...t,box:b}))).sort((a,b)=>b.last.at-a.last.at).filter((t,i,a)=>a.findIndex(x=>x.id===t.id)===i).slice(0,5);
- const acts=SB.list("activity").filter(a=>isAdmin()||a.actor===D.me.email||a.action.startsWith("request_")&&reqs.some(r=>r.no===a.target)).slice().sort((a,b)=>b.at-a.at).slice(0,7);
- return `<div class="g12">
- <section class="hero c12"><img src="${img("team")}" alt=""><div class="waves">${waves()}</div>
-  <div><div class="meta"><i></i>${new Date().toLocaleDateString(loc(),{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
-  <h2>${hr<12?tx("صباح الخير","Good morning"):tx("مساء الخير","Good evening")}${tx("،",",")} <b>${esc(first)}</b></h2>
-  <p>${can("requests")?tx(`لديك <strong>${open.length}</strong> طلب ينتظر القرار و<strong>${un}</strong> رسالة جديدة في صناديقك.`,`You have <strong>${open.length}</strong> requests awaiting a decision and <strong>${un}</strong> new messages.`):tx(`لديك <strong>${un}</strong> رسالة جديدة. كل ما تنشره هنا يظهر للموظفين فورًا.`,`You have <strong>${un}</strong> new messages. Everything you publish here goes live instantly.`)}</p></div>
-  <div class="acts">${can("requests")?`<button class="btn l" data-go="requests">${I("inbox")}${tx("راجع الطلبات","Review requests")}</button>`:""}${can("content")?`<button class="btn ${can("requests")?"g":"l"}" data-newnews>${I("plus")}${tx("خبر جديد","New announcement")}</button>`:""}<button class="btn g" data-compose>${I("edit")}${tx("رسالة جديدة","New message")}</button></div></section>
- ${kp.slice(0,4).join("")}
- ${can("requests")?`<div class="card c8"><div class="ch"><div><h3>${tx("حركة الطلبات","Request volume")}</h3><p>${tx("آخر 30 يومًا حسب النوع","Last 30 days by type")}</p></div><div class="legend">${Object.keys(SB.REQ_TYPES).map(t=>`<span><i style="background:${RT(t).c}"></i>${AR()?RT(t).ar:RT(t).en}</span>`).join("")}</div></div><div class="chart">${stacked(reqs,30)}</div></div>
- <div class="card c4"><div class="ch"><div><h3>${tx("حسب الحالة","By status")}</h3><p>${tx("كل الطلبات في نطاقك","All requests in your scope")}</p></div></div><div class="donut">${donut(byStatus)}<div class="dl">${byStatus.filter(s=>s.v).map(s=>`<div><i style="background:${s.c}"></i>${s.l}<b>${s.v}</b></div>`).join("")}</div></div></div>
- <div class="card c7"><div class="ch"><div><h3>${tx("بانتظار قرارك","Awaiting your decision")}</h3><p>${tx("الأقدم أولًا","Oldest first")}</p></div><button class="btn s sm" data-go="requests">${tx("كل الطلبات","All requests")}${I("arrow","flip")}</button></div>
-  ${open.length?open.slice().sort((a,b)=>a.createdAt-b.createdAt).slice(0,5).map(r=>{const u=userOf(r.email);return `<div class="dq"><span class="ic" style="background:${RT(r.type).c}">${I(RT(r.type).i)}</span><div class="t" data-req="${r.id}" style="cursor:pointer"><b>${AR()?RT(r.type).ar:RT(r.type).en} · ${esc(uname(u)||r.email)}</b><small><span class="mono">${esc(r.no)}</span> · ${esc(r.branch||"—")} · ${ago(r.createdAt)}</small></div><div class="q"><button class="btn s sm" data-req="${r.id}">${tx("مراجعة","Review")}${I("arrow","flip")}</button></div></div>`}).join(""):emptyBox("check",tx("لا شيء ينتظر قرارك","Nothing awaits you"),tx("أحسنت! كل الطلبات تمت معالجتها.","All caught up."))}</div>`:""}
- <div class="card ${can("requests")?"c5":"c7"}"><div class="ch"><div><h3>${tx("أحدث الرسائل","Latest messages")}</h3><p>${tx("في صناديقك","In your mailboxes")}</p></div><button class="btn s sm" data-go="mail">${tx("البريد","Mail")}${I("arrow","flip")}</button></div>
-  ${threads.length?threads.map(t=>`<div class="dq" style="grid-template-columns:38px minmax(0,1fr) auto;cursor:pointer" data-openmail="${esc(t.box)}|${esc(t.id)}">${addrAv(t.last.from===t.box?t.people.find(p=>p!==t.box)||t.box:t.last.from,38)}<div class="t"><b>${t.unread?"● ":""}${esc(t.subject)}</b><small>${esc(dname(t.last.from))} → ${esc(dname(t.box))}</small></div><span class="muted sm">${ago(t.last.at)}</span></div>`).join(""):emptyBox("mail",tx("لا رسائل جديدة","No new messages"))}</div>
- ${can("employees")?`<div class="card c4"><div class="ch"><div><h3>${tx("الموظفون حسب الفرع","People by branch")}</h3><p>${tx("الحسابات النشطة","Active accounts")}</p></div></div><div class="hb2">${brs.map(([b,n])=>`<div class="r"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b)}</span><div class="tr"><i style="width:${n/bmx*100}%"></i></div><b class="tnum">${n}</b></div>`).join("")}</div></div>`:""}
- ${can("content")?`<div class="card c4"><div class="ch"><div><h3>${tx("محتوى البوابة","Portal content")}</h3><p>${tx("اختصارات للتحرير","Quick edit")}</p></div></div><div class="tiles">${[["news","bell","#7B61C9",SB.list("news").length,["خبر","news"]],["docs","folder","#383837",SB.list("docs").length,["مستند","docs"]],["apps","grid","#0A8BA0",SB.list("apps").length,["نظام","systems"]],["branches","pin","#2F9E57",SB.list("branches").length,["فرع","branches"]],["home","home","#B07A4A",SB.list("reminders").length,["شريحة","slides"]],["company","building","#08343B",SB.list("leaders").length,["قائد","leaders"]]].map(([v,i,c,n,l])=>`<button class="tile" data-go="${v}"><span class="ic" style="background:${c}">${I(i)}</span><b class="tnum">${n}</b><span>${P(l)}</span></button>`).join("")}</div></div>`:""}
- <div class="card ${can("employees")&&can("content")?"c4":"c5"}"><div class="ch"><div><h3>${tx("آخر النشاطات","Recent activity")}</h3></div>${isAdmin()?`<button class="btn s sm" data-go="activity">${tx("السجل","Log")}${I("arrow","flip")}</button>`:""}</div><div class="feed">${acts.map(actRow).join("")||emptyBox("activity",tx("لا نشاط بعد","No activity yet"))}</div></div>
- </div>`};
+ const threads=boxes().flatMap(b=>SB.mail.threads(b,"inbox").map(t=>({...t,box:b}))).sort((a,b)=>b.last.at-a.last.at).filter((t,i,a)=>a.findIndex(x=>x.id===t.id)===i).slice(0,4);
+ const acts=SB.list("activity").filter(a=>isAdmin()||a.actor===me.email||a.action.startsWith("request_")&&reqs.some(r=>r.no===a.target)).sort((a,b)=>b.at-a.at).slice(0,4);
+ const oldest=open[0],oldDays=oldest?Math.max(0,Math.floor((Date.now()-oldest.createdAt)/DAY)):0;
+ const metrics=[];
+ const metric=(view,icon,label,n,note,tone="sea",extra="")=>`<button class="ds-metric ${tone}" data-go="${view}" ${extra}><span class="ds-metric-head"><span>${label}</span><i>${I(icon)}</i></span><b>${fmt(n)}</b><span class="ds-metric-foot">${note}${I("arrow","flip")}</span></button>`;
+ if(hasR)metrics.push(metric("requests","inbox",tx("بانتظار القرار","Awaiting a decision"),open.length,oldest?tx(`أقدم طلب منذ ${oldDays} يوم`, `Oldest request: ${oldDays} days`):tx("كل الطلبات محسومة","All caught up"),"sea"));
+ metrics.push(metric("mail","mail",tx("محادثات غير مقروءة","Unread conversations"),un,tx("في صناديقك الداخلية","Across your mailboxes"),"blue"));
+ if(hasE){metrics.push(metric("employees","users",tx("زملاء نشطون","Active colleagues"),people.length,tx("دليل فريق السندباد","Your Sindbad team"),"olive"));metrics.push(metric("employees","user",tx("بانتظار التفعيل","Awaiting activation"),pending.length,tx("راجع الحسابات الجديدة","Review new accounts"),"sand",'data-pending-users="true"'))}
+ if(hasC&&metrics.length<4){metrics.push(metric("news","bell",tx("أخبار منشورة","Published news"),news.filter(n=>!n.draft).length,tx("آخر أخبار الشركة","Latest company updates"),"olive"));metrics.push(metric("docs","folder",tx("مستندات المكتبة","Library documents"),docs.length,tx("معرفة متاحة للفريق","Knowledge for the team"),"sand"));if(metrics.length<4)metrics.push(metric("news","edit",tx("مسودات الأخبار","News drafts"),news.filter(n=>n.draft).length,tx("تنتظر المراجعة والنشر","Ready for review"),"sea"))}
+ const series14=hasR?series(reqs,14):series(allMsgs,14,"at"),max=Math.max(1,...series14),sum=series14.reduce((a,b)=>a+b,0);
+ const chart=series14.map((n,i)=>{const d=new Date();d.setDate(d.getDate()-13+i);const label=d.toLocaleDateString(loc(),{day:"numeric",month:"short"});return `<div class="ds-bar-col" tabindex="0" aria-label="${esc(label)}: ${n}"><span class="ds-chart-tip">${esc(label)} · ${n}</span><div class="ds-bar-slot"><i style="height:${n?Math.max(5,n/max*100):2}%" class="${n===max&&n?"peak":""} ${!n?"zero":""}"></i></div><small>${i%3===0||i===13?d.getDate():""}</small></div>`}).join("");
+ const statuses=Object.entries(SB.STATUS).map(([k,v])=>({key:k,name:AR()?v.ar:v.en,n:reqs.filter(r=>r.status===k).length,color:{pending:"#C3A45C",review:"#0A8BA0",approved:"#618F72",rejected:"#BA6970",cancelled:"#99AAA7"}[k]}));
+ let stop=0;const conic=statuses.filter(x=>x.n).map(x=>{const from=stop;stop+=x.n/Math.max(1,reqs.length)*100;return `${x.color} ${from}% ${stop}%`}).join(",")||"var(--surface3) 0% 100%";
+ const branches={};people.forEach(u=>{const b=u.branch||tx("غير محدد","Unassigned");branches[b]=(branches[b]||0)+1});
+ const branchRows=Object.entries(branches).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ const cardHead=(label,sub,view)=>`<header class="ds-card-head"><div><h3>${label}</h3><p>${sub}</p></div>${view?`<button class="ds-link" data-go="${view}">${tx("عرض الكل","View all")}${I("arrow","flip")}</button>`:""}</header>`;
+ const queue=hasR?`<section class="ds-card ds-queue">${cardHead(tx("يحتاج انتباهك","Needs your attention"),tx("الطلبات المفتوحة، الأقدم أولًا","Open requests, oldest first"),"requests")}<div class="ds-queue-list">${open.length?open.slice(0,5).map(r=>{const u=userOf(r.email),days=Math.max(0,Math.floor((Date.now()-r.createdAt)/DAY));return `<button class="ds-task" data-req="${r.id}">${av(u||{name_ar:r.email},38)}<span class="ds-task-person"><b>${esc(uname(u)||r.email)}</b><small>${esc(r.branch||"")}</small></span><span class="ds-task-type">${AR()?RT(r.type).ar:RT(r.type).en}<small class="mono">${esc(r.no)}</small></span><span class="ds-task-status">${stChip(r.status)}<small>${days?tx(`منذ ${days} يوم`,`${days} days ago`):tx("اليوم","Today")}</small></span><span class="ds-task-arrow">${I("arrow","flip")}</span></button>`}).join(""):emptyBox("check",tx("أنجزت كل ما ينتظرك","You are all caught up"),tx("ستظهر الطلبات الجديدة هنا فور وصولها.","New requests will appear here as they arrive."))}</div>${oldest?`<div class="ds-queue-footer"><span><i></i>${tx("ابدأ بالأقدم لتقليل وقت الانتظار","Start with the oldest to shorten waiting time")}</span><button data-req="${oldest.id}">${tx("مراجعة الطلب","Review request")}${I("arrow","flip")}</button></div>`:""}</section>`:
+ `<section class="ds-card ds-queue">${cardHead(tx("غرفة التحرير","Your editorial desk"),tx("أحدث محتوى الشركة في مكان واحد","The latest company content in one place"),"news")}<div class="ds-editor-list">${news.slice().sort((a,b)=>(b.at||b.createdAt)-(a.at||a.createdAt)).slice(0,4).map(n=>`<button data-editnews="${esc(n.id)}"><span class="ds-news-symbol">${I("bell")}</span><span><b>${esc(L(n,"title"))}</b><small>${fdate(n.at||n.createdAt)}</small></span><span class="chip ${n.draft?"w":"g"}">${n.draft?tx("مسودة","Draft"):tx("منشور","Published")}</span></button>`).join("")||emptyBox("bell",tx("ابدأ أول خبر للفريق","Publish the team's first update"))}</div></section>`;
+ return `<div class="ds-overview">
+  <div class="ds-page-label"><span>${tx("مساحة الإدارة","Management workspace")}<i>/</i>${tx("نظرة عامة","Overview")}</span><span>${now.toLocaleDateString(loc(),{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</span></div>
+  <section class="ds-welcome"><div class="ds-welcome-pattern" aria-hidden="true">${waves(.6)}</div><div class="ds-welcome-copy"><span class="ds-eyebrow"><i></i> SINDBAD INSIDE</span><h2>${now.getHours()<12?tx("صباح الخير، ","Good morning, "):tx("مساء الخير، ","Good evening, ")}<strong>${esc(first)}.</strong></h2><p>${hasR?tx(`لديك ${open.length} طلب قيد المتابعة. لنمنح فريقك بداية أفضل.`,`${open.length} requests need follow-up. Give your team a better start.`):tx("مساحتك لصناعة تجربة أفضل لكل زميل في السندباد.","Your space to create a better experience for every colleague.")}</p><div class="ds-welcome-actions"><button class="ds-primary" data-go="${hasR?"requests":"news"}">${tx(hasR?"راجع الطلبات":"إدارة المحتوى",hasR?"Review requests":"Manage content")}${I("arrow","flip")}</button><button class="ds-secondary" ${hasC?"data-newnews":"data-compose"}>${I(hasC?"plus":"edit")}${hasC?tx("خبر جديد","New announcement"):tx("رسالة جديدة","New message")}</button></div></div><div class="ds-welcome-aside"><span class="ds-welcome-symbol"><img src="../assets/brand/sindbad-symbol.svg" alt=""></span><span>${tx("فريق واحد. رؤية واحدة.","One team. One vision.")}</span><small>BUILD YOUR DREAM</small></div></section>
+  <div class="ds-metrics">${metrics.slice(0,4).join("")}</div>
+  <div class="ds-main-grid">${queue}<section class="ds-card ds-volume">${cardHead(hasR?tx("حركة الطلبات","Request activity"):tx("حركة الرسائل","Message activity"),tx("آخر 14 يومًا · العدد اليومي","Last 14 days · daily count"),null)}<div class="ds-volume-total"><b>${fmt(sum)}</b><span>${hasR?tx("طلب وارد","requests received"):tx("رسالة واردة","messages received")}</span><span class="ds-period">14 ${tx("يومًا","days")}</span></div><div class="ds-chart" role="group" aria-label="${tx("العدد اليومي خلال آخر 14 يومًا","Daily count for the last 14 days")}"><div class="ds-chart-axis"><span>${max}</span><span>${max/2}</span><span>0</span></div><div class="ds-bars">${chart}</div></div><div class="ds-chart-note"><i></i>${hasR?tx("عدد الطلبات التي وصلت يوميًا","Number of requests received each day"):tx("عدد الرسائل التي وصلت يوميًا","Number of messages received each day")}</div></section></div>
+  <div class="ds-lower-grid">
+   <section class="ds-card ds-inbox">${cardHead(tx("آخر المحادثات","Recent conversations"),tx("ابقَ قريبًا من فريقك","Stay close to your team"),"mail")}<div class="ds-conversations">${threads.length?threads.map(t=>{const cp=t.last.from===t.box?t.people.find(p=>p!==t.box)||t.box:t.last.from;return `<button class="ds-conversation" data-openmail="${esc(t.box)}|${esc(t.id)}">${addrAv(cp,38)}<span><b>${esc(t.subject)}</b><small>${esc(dname(cp))} · ${esc(dname(t.box))}</small></span><span class="ds-conv-time">${ago(t.last.at)}${t.unread?'<i class="ds-unread"></i>':""}</span></button>`}).join(""):emptyBox("mail",tx("لا محادثات بعد","No conversations yet"))}</div></section>
+   ${hasR?`<section class="ds-card ds-status">${cardHead(tx("الصورة الكاملة","At a glance"),tx("حالات الطلبات في نطاقك","Request statuses in your scope"),null)}<div class="ds-donut" role="img" aria-label="${esc(statuses.map(x=>x.name+": "+x.n).join("، "))}" style="--segments:${conic}"><div><b>${fmt(reqs.length)}</b><span>${tx("إجمالي الطلبات","Total requests")}</span></div></div><div class="ds-status-key">${statuses.filter(x=>x.n).map(x=>`<span><i style="background:${x.color}"></i>${x.name}<b>${x.n}</b></span>`).join("")}</div></section>`:""}
+   ${hasE?`<section class="ds-card ds-team">${cardHead(tx("فريقنا عبر الفروع","Our team across branches"),tx("الحسابات النشطة فقط","Active accounts only"),"employees")}<div class="ds-branches">${branchRows.map(([b,n])=>`<div><span>${esc(b)}<b>${n}</b></span><i><em style="width:${n/Math.max(1,people.length)*100}%"></em></i></div>`).join("")}</div>${pending.length?`<button class="ds-pending" data-go="employees" data-pending-users="true">${I("user")}<span>${tx(`${pending.length} حساب ينتظر التفعيل`,`${pending.length} accounts awaiting activation`)}</span>${I("arrow","flip")}</button>`:""}</section>`:`<section class="ds-card ds-activity">${cardHead(tx("آخر النشاطات","Recent activity"),tx("ما حدث في نطاقك","Activity in your scope"),isAdmin()?"activity":null)}<div class="feed">${acts.map(actRow).join("")||emptyBox("activity",tx("لا نشاط بعد","No activity yet"))}</div></section>`}
+  </div>
+  ${hasC?`<section class="ds-card ds-content">${cardHead(tx("بوابة تستحق فريقك","A portal for your team"),tx("اختصارات إدارة المحتوى","Content management shortcuts"),null)}<div class="ds-content-links">${[["news","bell",tx("الأخبار","News"),news.length],["docs","folder",tx("المكتبة","Library"),docs.length],["apps","grid",tx("الأنظمة","Systems"),SB.list("apps").length],["home","home",tx("الرئيسية","Home"),SB.list("reminders").length],["branches","pin",tx("الفروع","Branches"),SB.list("branches").length],["company","building",tx("الشركة","Company"),null]].map(([v,i,l,n])=>`<button data-go="${v}"><span>${I(i)}</span><b>${l}</b><small>${n??I("arrow","flip")}</small></button>`).join("")}</div></section>`:""}
+  <div class="ds-endnote"><span>SINDBAD INSIDE</span><span>${tx("المؤشرات ضمن صلاحيتك · بيانات المعاينة محفوظة في هذا المتصفح","Metrics reflect your access · preview data is stored in this browser")}</span></div>
+ </div>`;
+};
+document.addEventListener("click",e=>{const t=e.target.closest("[data-tdd]"),m=e.target.closest("[data-meopen]");
+ document.querySelectorAll(".tdd.open").forEach(d=>{if(!t||d!==t.parentElement){d.classList.remove("open");d.querySelector("[data-tdd]").setAttribute("aria-expanded","false")}});
+ if(t){const d=t.parentElement,o=d.classList.toggle("open");t.setAttribute("aria-expanded",String(o))}
+ const tm=document.getElementById("tmenu");if(tm){if(m){tm.hidden=!tm.hidden;m.setAttribute("aria-expanded",String(!tm.hidden))}else if(!e.target.closest("#tmenu"))tm.hidden=true}},true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){document.querySelectorAll(".tdd.open").forEach(d=>d.classList.remove("open"));const tm=document.getElementById("tmenu");if(tm)tm.hidden=true}});
+AFTER.overview=()=>{};
 
 /* ---- MAIL ---- */
 const MF=[["inbox","inbox",["الوارد","Inbox"]],["starred","star",["المميزة","Starred"]],["sent","send",["المرسلة","Sent"]],["archive","archive",["الأرشيف","Archive"]],["trash","trash",["المحذوفات","Trash"]]];
@@ -567,6 +610,7 @@ document.addEventListener("click",async e=>{
  if(q("[data-themebtn]")){const h=document.documentElement;h.dataset.theme=isDark()?"light":"dark";try{localStorage.setItem("sbd_theme",h.dataset.theme)}catch(_){}shell();if(D.me)render(false);return}
  if(q("[data-logout]")){SB.auth.logout("dashboard");D.me=null;shell();return}
  if(q("[data-menu]")){openSide();return}
+ if(q("[data-closemenu]")){closeSide();return}
  if(q("[data-mini]")){D.mini=!D.mini;try{localStorage.setItem("sbd_mini",D.mini?"1":"0")}catch(_){}$("#app").classList.toggle("mini",D.mini);return}
  if(q("[data-search]")){openPal();return}
  if(x=q("[data-pi]")){runPal(+x.dataset.pi);return}
@@ -669,6 +713,7 @@ document.addEventListener("change",async e=>{const id=e.target.id;
  if(id==="impF"&&e.target.files[0]){try{const snapshot=JSON.parse(await e.target.files[0].text());if(!await confirmBox(tx("استبدال بيانات المعاينة؟","Replace preview data?"),tx("ستُستبدل الحسابات والطلبات والرسائل الحالية بمحتوى الملف. صدّر نسخة من بياناتك أولًا. المرفقات غير مشمولة.","Current accounts, requests and messages will be replaced by the file. Export your current data first. Attachments are not included."),tx("استبدال البيانات","Replace data")))return;SB.importAll(snapshot);toast(tx("تم الاستيراد","Imported"));render(false)}catch(_){toast(tx("ملف غير صالح.","Invalid file."))}}
 });
 document.addEventListener("keydown",e=>{
+ if(D.sideOpen&&e.key==="Tab"){const f=[...$("#side").querySelectorAll("button,a[href]")].filter(el=>el.getClientRects().length&&!el.disabled);if(e.shiftKey&&document.activeElement===f[0]){e.preventDefault();f.at(-1).focus()}else if(!e.shiftKey&&document.activeElement===f.at(-1)){e.preventDefault();f[0].focus()}}
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPal();return}
  if(e.key==="Escape"){if($("#drawer").classList.contains("open"))closeDrawer();closeSide()}
  if(e.key==="Enter"&&e.target.matches("[data-req],[data-thread],[data-go].kpi,.bcard")&&!/button|a|tr/i.test(e.target.tagName)){e.target.click()}

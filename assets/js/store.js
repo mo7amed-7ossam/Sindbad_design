@@ -416,6 +416,90 @@
     if (urlCache[ref]) { URL.revokeObjectURL(urlCache[ref]); delete urlCache[ref]; }
   }
 
+  /* Upgrade the system catalogue once, without resetting employee data.
+     Future dashboard edits are kept. Importing an older snapshot upgrades it on next load. */
+  const SYSTEM_APPS = [
+  {
+    "id": "sindflow",
+    "order": 1,
+    "icon": "list",
+    "color": "#0A8BA0",
+    "url": "https://oracleapex.com/ords/r/sindbad_sales/sindbad-sales-panal134338/login",
+    "name_ar": "Sindflow",
+    "name_en": "Sindflow",
+    "desc_ar": "تنظيم مهام موظفي الشركة وتوزيعها ومتابعة تنفيذها.",
+    "desc_en": "Organize, assign and track employee tasks."
+  },
+  {
+    "id": "ayun",
+    "order": 2,
+    "icon": "pin",
+    "color": "#2F9E57",
+    "url": "https://server.ayunts.com/",
+    "name_ar": "Ayun",
+    "name_en": "Ayun",
+    "desc_ar": "متابعة سيارات النقل وحركة أسطول الشركة.",
+    "desc_en": "Track transport vehicles and the company fleet."
+  },
+  {
+    "id": "company-dashboard",
+    "order": 3,
+    "icon": "building",
+    "color": "#08343B",
+    "url": "https://www.sindbadom.work/admin/login",
+    "name_ar": "Dashboard",
+    "name_en": "Dashboard",
+    "desc_ar": "نظام الإدارة الداخلية للشركة.",
+    "desc_en": "The company’s internal administration system."
+  },
+  {
+    "id": "project-manager",
+    "order": 4,
+    "icon": "folder",
+    "color": "#B07A4A",
+    "url": "https://sindbadom.work/pm/login",
+    "name_ar": "Project Manager",
+    "name_en": "Project Manager",
+    "desc_ar": "إدارة مشاريع الشركة ومتابعة سير العمل.",
+    "desc_en": "Manage company projects and follow their progress."
+  },
+  {
+    "id": "odoo",
+    "order": 5,
+    "icon": "chart",
+    "color": "#714B67",
+    "url": "https://sindbad-home.odoo.com/odoo",
+    "name_ar": "Odoo",
+    "name_en": "Odoo",
+    "desc_ar": "تسجيل العملاء ومتابعتهم وإدارة المحاسبة.",
+    "desc_en": "Customer registration, follow-up and accounting."
+  },
+  {
+    "id": "training",
+    "order": 6,
+    "icon": "cap",
+    "color": "#F26B21",
+    "url": "",
+    "internal": "training",
+    "name_ar": "مركز التدريب",
+    "name_en": "Training hub",
+    "desc_ar": "منصات التعلم والأدلة وأخبار التدريب في مكان واحد.",
+    "desc_en": "Learning platforms, guides and training updates in one place."
+  }
+];
+  function migrateSystems() {
+    const seeded = read("seeded", {});
+    if (seeded.systemsCatalog === 1) return;
+    return transaction(() => {
+      const old = list("apps"), ids = new Set(SYSTEM_APPS.map(a => a.id));
+      const retained = old.filter(a => !ids.has(a.id) && !(a.id === "attendance" && !a.url && a.name_en === "Attendance app"))
+        .map(a => a.id === "elearn" ? {...a, group:"training", order:10} : ["mail","web","map"].includes(a.id) ? {...a, order:{mail:7,web:8,map:9}[a.id]} : a);
+      const configured = SYSTEM_APPS.map(a => ({...old.find(x => x.id === a.id), ...a, createdAt:old.find(x => x.id === a.id)?.createdAt || now(), updatedAt:now()}));
+      saveAll("apps", configured.concat(retained));
+      write("seeded", {...seeded, systemsCatalog:1});
+    });
+  }
+
   /* ---------- seed ---------- */
   async function seed(force) {
     if (!force && read("seeded", null)) return false;
@@ -551,9 +635,10 @@
     Object.keys(localStorage).filter(k => k.startsWith(NS)).forEach(k => localStorage.removeItem(k));
     try { const db = await idb(); db.transaction("files", "readwrite").objectStore("files").clear(); } catch (e) {}
     await seed(true);
+    migrateSystems();
   }
   function exportAll() {
-    const o = { v: 2, at: now(), cfg: {}, cols: {} };
+    const o = { v: 2, at: now(), systemsCatalog: read("seeded", {}).systemsCatalog || 0, cfg: {}, cols: {} };
     COLS.forEach(c => o.cols[c] = list(c));
     ["settings", "company", "contact", "eotm", "seq"].forEach(k => o.cfg[k] = cfg(k, null));
     return o;
@@ -566,11 +651,11 @@
     return transaction(()=>{
       COLS.forEach(c => write("c:" + c, o.cols[c]));
       ["settings","company","contact","eotm","seq"].forEach(k=>{if(o.cfg[k]!=null)setCfg(k,o.cfg[k])});
-      write("seeded", { at: now(), v: 2 });
+      write("seeded", { at: now(), v: 2, systemsCatalog: o.systemsCatalog === 1 ? 1 : 0 });
     });
   }
 
-  const ready = seed(false).catch(e => console.error("seed", e));
+  const ready = seed(false).then(migrateSystems).catch(e => console.error("seed", e));
 
   global.SB = {
     ready, DOMAIN, DEPTS, ROLES, REQ_TYPES, STATUS, domain, addr,

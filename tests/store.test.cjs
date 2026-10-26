@@ -5,8 +5,8 @@ const vm=require('node:vm');
 const fs=require('node:fs');
 const path=require('node:path');
 const {webcrypto}=require('node:crypto');
-async function fixture(){
- const values=new Map();let failKey=null;
+async function fixture(initial){
+ const values=new Map(initial);let failKey=null;
  const storage={getItem:k=>values.get(k)??null,setItem(k,v){if(failKey===k){failKey=null;throw Error('quota')}values.set(k,v)},removeItem:k=>values.delete(k)};
  const context={localStorage:storage,crypto:webcrypto,TextEncoder,console,addEventListener(){}};context.window=context;
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../assets/js/store.js'),'utf8'),context);
@@ -106,4 +106,35 @@ test('invalid imports do not replace any current data; valid snapshots round-tri
  assert.throws(()=>sb.importAll(snapshot),{code:'format'});
  assert.equal(JSON.stringify(sb.exportAll().cols),before);
  sb.importAll(sb.exportAll());assert.equal(JSON.stringify(sb.exportAll().cols),before);
+});
+
+test('company systems use the supplied destinations and training is internal',async()=>{
+ const {sb}=await fixture();
+ const expected={sindflow:'https://oracleapex.com/ords/r/sindbad_sales/sindbad-sales-panal134338/login',ayun:'https://server.ayunts.com/','company-dashboard':'https://www.sindbadom.work/admin/login','project-manager':'https://sindbadom.work/pm/login',odoo:'https://sindbad-home.odoo.com/odoo'};
+ for(const [id,url] of Object.entries(expected))assert.equal(sb.get('apps',id).url,url);
+ assert.equal(sb.get('apps','training').internal,'training');
+ assert.equal(sb.get('apps','elearn').group,'training');
+ assert.equal(sb.get('apps','attendance'),null);
+});
+
+test('catalogue upgrade preserves business data, custom systems and later edits',async()=>{
+ const {sb,values}=await fixture();
+ sb.put('apps',{id:'custom',name_en:'Custom tool',url:'https://example.com/team'});
+ sb.put('apps',{id:'attendance',name_en:'Attendance app',url:'https://example.com/attendance'});
+ sb.remove('apps','sindflow');
+ const seeded=JSON.parse(values.get('sbx:v2:seeded'));delete seeded.systemsCatalog;
+ values.set('sbx:v2:seeded',JSON.stringify(seeded));
+ const untouched=[...values].filter(([k])=>k!=='sbx:v2:seeded'&&k!=='sbx:v2:c:apps');
+ const migrated=await fixture(values);
+ for(const [k,v] of untouched)assert.equal(migrated.values.get(k),v,k);
+ assert.equal(migrated.sb.get('apps','custom').url,'https://example.com/team');
+ assert.equal(migrated.sb.get('apps','attendance').url,'https://example.com/attendance');
+ assert(migrated.sb.get('apps','sindflow'));
+ migrated.sb.put('apps',{id:'odoo',url:'https://example.com/reconfigured'});
+ const reloaded=await fixture(migrated.values);
+ assert.equal(reloaded.sb.get('apps','odoo').url,'https://example.com/reconfigured');
+ assert.equal(reloaded.sb.list('apps').filter(a=>a.id==='training').length,1);
+ reloaded.sb.importAll(reloaded.sb.exportAll());
+ const restored=await fixture(reloaded.values);
+ assert.equal(restored.sb.get('apps','odoo').url,'https://example.com/reconfigured');
 });
