@@ -1,7 +1,7 @@
 /* Keyboard navigation, accessible action names, and drawer focus management. */
 (() => {
   'use strict';
-  const actions = '[data-news],[data-doc],[data-thread],[data-myreq],[data-req],[data-openmail],[data-go].kpi';
+  const actions = '[data-news],[data-progopen],[data-doc],[data-thread],[data-myreq],[data-req],[data-openmail],[data-go].kpi';
   function enhance(root) {
     if (!(root instanceof Element)) return;
     const nodes = [root, ...root.querySelectorAll(actions + ',button[title],main')];

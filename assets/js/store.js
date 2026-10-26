@@ -496,6 +496,25 @@
       desc_en: "Kitchen installation and maintenance requests: customers send photos and location, book a slot and track status; technicians receive jobs and document the work.",
       android: "https://play.google.com/store/apps/details?id=om.sindbad.app", ios: "" }
   ];
+  /* ---------- one-off: add the 2027 sales training programme to browsers seeded before it existed ---------- */
+  const SALES_TRAINING_DOC = { id: "salestraining", order: 5.5, cat: "training", pages: 82, url: "assets/docs/sales-training-program-2027.pdf", title_ar: "برنامج تدريب فريق المبيعات", title_en: "Sales Team Training Program", desc_ar: "20 جزءًا على 6 أيام: الشركة وOPPEIN، رحلة العميل، الحوار البيعي والسكريبتات، الاعتراضات والمقارنات، الإغلاق والمتابعة، ثم لعب الأدوار والتقييم. إعداد أحمد صابر، المدير العام لفروع السندباد.", desc_en: "20 modules over 6 days: Sindbad & OPPEIN, the customer journey, sales conversation and scripts, objections and comparisons, closing and follow-up, then role-play and assessment. Prepared by Ahmed Saber, GM of Sindbad branches.", edition_ar: "النسخة الكاملة 2027", edition_en: "Complete edition 2027" };
+  function migrateSalesTraining() {
+    const seeded = read("seeded", {});
+    if (seeded.salesTraining === 1) return;
+    if (!list("docs").some(d => d.id === SALES_TRAINING_DOC.id)) put("docs", { ...SALES_TRAINING_DOC });
+    write("seeded", { ...read("seeded", {}), salesTraining: 1 });
+  }
+  /* ---------- training programmes (portal training hub; managed from dashboard › Training programmes) ----------
+     Each programme: tab (oppein|sindbad|external), status (published|draft), docId (library PDF) + optional relatedDoc,
+     days [{t_ar,t_en}], modules [{t_ar,t_en,dur_ar,dur_en,page,day}], eval [{t_ar,t_en,w}] + passMark, rules [{t_ar,t_en,d_ar,d_en}]. */
+  const PROGRAMS = [{"id": "sales2027", "order": 1, "tab": "sindbad", "status": "published", "docId": "salestraining", "title_ar": "برنامج تدريب فريق المبيعات", "title_en": "Sales Team Training Program", "badge_ar": "برنامج داخلي إلزامي", "badge_en": "Mandatory in-house programme", "desc_ar": "المرجع التدريبي لفريق المبيعات والتصميم: من فهم الشركة والعميل، إلى الحوار البيعي ومواقف العملاء والاعتراضات، ثم الإغلاق والمتابعة والتقييم. متوافق مع دليل إجراءات المبيعات والتصميم، وعند أي اختلاف يُطبَّق الدليل.", "desc_en": "The training reference for the sales & design team: the company and the client, the sales conversation, client situations and objections, then closing, follow-up and assessment. It follows the Sales & Design Procedures Manual, which prevails in any conflict.", "by_ar": "إعداد أحمد صابر · المدير العام لفروع السندباد", "by_en": "By Ahmed Saber · GM of Sindbad branches", "relatedDoc": "sales", "passMark": 75, "passNote_ar": "يُعتمد المتدرب بـ 75% فأكثر، وبدون أي مخالفة في محور الالتزام بالإجراءات والمحظورات.", "passNote_en": "Pass mark is 75% or more, with no breach on the procedures & red-lines axis.", "rules": [{"t_ar": "من يدرّب؟", "t_en": "Who trains?", "d_ar": "مدير المعرض يشرح الجزء، ثم ينفذ التمرين بلعب الأدوار، ثم يقيّم.", "d_en": "The showroom manager explains each module, runs the role-play, then assesses."}, {"t_ar": "قبل العمل مع العملاء", "t_en": "Before serving clients", "d_ar": "الموظف الجديد لا يتعامل مع العملاء بشكل مستقل قبل اجتياز تقييم الجزء 20.", "d_en": "New staff don’t serve clients on their own before passing the module 20 assessment."}, {"t_ar": "النصوص الحوارية", "t_en": "Scripts", "d_ar": "بلهجة خليجية قريبة من العميل مع ترجمة إنجليزية. افهم الفكرة وقلها بأسلوبك.", "d_en": "In a Gulf dialect with English translation. Learn the idea, say it your way."}], "days": [{"t_ar": "الأساسيات", "t_en": "Foundations"}, {"t_ar": "مهارات الحوار", "t_en": "Conversation skills"}, {"t_ar": "مواقف العملاء وفتح الملف", "t_en": "Client situations & the design file"}, {"t_ar": "الاعتراضات والمقارنات", "t_en": "Objections & comparisons"}, {"t_ar": "الإغلاق والمتابعة", "t_en": "Closing & follow-up"}, {"t_ar": "التطبيق والتقييم والاعتماد", "t_en": "Practice, assessment & sign-off"}], "modules": [{"t_ar": "مقدمة عن شركة السندباد وعلامة OPPEIN", "t_en": "Introduction to Sindbad & OPPEIN", "dur_ar": "45 دقيقة", "dur_en": "45 min", "page": 6, "day": 1}, {"t_ar": "رحلة العميل ودورة المبيعات الرسمية", "t_en": "The customer journey & official sales cycle", "dur_ar": "90 دقيقة", "dur_en": "90 min", "page": 10, "day": 1}, {"t_ar": "فهم شخصية العميل العُماني واحتياجاته", "t_en": "Understanding the Omani customer", "dur_ar": "60 دقيقة", "dur_en": "60 min", "page": 16, "day": 1}, {"t_ar": "الاحتياجات العاطفية التي تدفع قرار الشراء", "t_en": "Emotional drivers of buying decisions", "dur_ar": "60 دقيقة", "dur_en": "60 min", "page": 19, "day": 1}, {"t_ar": "مراحل البيع – مهارات الحوار مع العميل", "t_en": "The stages of the sales conversation", "dur_ar": "90 دقيقة", "dur_en": "90 min", "page": 23, "day": 2}, {"t_ar": "السكريبت التفصيلي لكل مرحلة", "t_en": "Detailed scripts for each stage", "dur_ar": "90 دقيقة + لعب أدوار", "dur_en": "90 min + role-play", "page": 27, "day": 2}, {"t_ar": "لغة الجسد ونبرة الصوت", "t_en": "Body language & tone of voice", "dur_ar": "60 دقيقة", "dur_en": "60 min", "page": 33, "day": 2}, {"t_ar": "تصنيف العميل بدون فقدانه", "t_en": "Classifying the client without losing the lead", "dur_ar": "75 دقيقة", "dur_en": "75 min", "page": 36, "day": 2}, {"t_ar": "التعامل مع العميل المتفرج / المستكشف", "t_en": "The browsing / exploring client", "dur_ar": "45 دقيقة", "dur_en": "45 min", "page": 40, "day": 3}, {"t_ar": "عملاء إنستجرام والقنوات الرقمية", "t_en": "Leads from Instagram & digital channels", "dur_ar": "45 دقيقة", "dur_en": "45 min", "page": 43, "day": 3}, {"t_ar": "إقناع العميل بفتح ملف التصميم", "t_en": "Convincing the client to open a design file", "dur_ar": "60 دقيقة", "dur_en": "60 min", "page": 46, "day": 3}, {"t_ar": "البيع المتكامل: نصائح وأمثلة", "t_en": "Cross-selling: tips & examples", "dur_ar": "45 دقيقة", "dur_en": "45 min", "page": 49, "day": 3}, {"t_ar": "اعتراضات السعر والخصومات والشك في العروض", "t_en": "Price, discount & offer-skepticism objections", "dur_ar": "75 دقيقة", "dur_en": "75 min", "page": 52, "day": 4}, {"t_ar": "الاعتراضات غير المتوقعة والعميل المتشكك", "t_en": "Unexpected objections & the skeptical client", "dur_ar": "60 دقيقة", "dur_en": "60 min", "page": 55, "day": 4}, {"t_ar": "سيناريوهات المقارنة مع المنافسين", "t_en": "Competitive comparison scenarios", "dur_ar": "90 دقيقة", "dur_en": "90 min", "page": 58, "day": 4}, {"t_ar": "الإغلاق الصحي وقائمة التحقق", "t_en": "Healthy closing & checklist", "dur_ar": "75 دقيقة", "dur_en": "75 min", "page": 63, "day": 5}, {"t_ar": "نظام المتابعة والعميل الذي لا يرد", "t_en": "Follow-up system & the non-responsive client", "dur_ar": "75 دقيقة", "dur_en": "75 min", "page": 68, "day": 5}, {"t_ar": "العميل المفقود: نخسر الصفقة ونكسب العلاقة", "t_en": "The lost client: lose the deal, keep the relationship", "dur_ar": "45 دقيقة", "dur_en": "45 min", "page": 72, "day": 5}, {"t_ar": "الأسئلة الشائعة مع إجابات نموذجية", "t_en": "FAQ with model answers", "dur_ar": "45 دقيقة", "dur_en": "45 min", "page": 75, "day": 5}, {"t_ar": "التمارين ولعب الأدوار والتقييم", "t_en": "Exercises, role-play & assessment", "dur_ar": "يوم كامل", "dur_en": "Full day", "page": 78, "day": 6}], "eval": [{"t_ar": "الترحيب والانطباع الأول", "t_en": "Welcome & first impression", "w": 10}, {"t_ar": "اكتشاف الاحتياج وجودة الأسئلة", "t_en": "Needs discovery & questions", "w": 20}, {"t_ar": "تقديم الحل (ميزة ← فائدة ← دليل)", "t_en": "Presenting the solution", "w": 15}, {"t_ar": "معالجة الاعتراضات", "t_en": "Handling objections", "w": 15}, {"t_ar": "الإغلاق وتحديد الخطوة التالية", "t_en": "Closing & next step", "w": 15}, {"t_ar": "لغة الجسد ونبرة الصوت", "t_en": "Body language & tone", "w": 10}, {"t_ar": "الالتزام بالإجراءات والمحظورات", "t_en": "Procedures & red lines", "w": 15}]}];
+  function migratePrograms() {
+    const seeded = read("seeded", {});
+    if (seeded.programs === 1) return;
+    const old = list("programs"), have = new Set(old.map(p => p.id));
+    saveAll("programs", old.concat(PROGRAMS.filter(p => !have.has(p.id)).map(p => ({ ...p, createdAt: now(), updatedAt: now() }))));
+    write("seeded", { ...read("seeded", {}), programs: 1 });
+  }
   function migrateMobile() {
     const seeded = read("seeded", {});
     if (seeded.mobileApps === 1) return;
@@ -580,6 +599,7 @@
       { id: "manager", order: 3, cat: "roles", pages: 2, url: "assets/docs/team-manager-responsibilities.pdf", title_ar: "مهام ومسؤوليات مدير الفريق", title_en: "Team Manager – Duties", desc_ar: "المستهدفات، قيادة الفريق والحضور، صالة العرض، جودة المبيعات، والتنسيق مع التسويق.", desc_en: "Targets, team and attendance, showroom, sales quality, marketing coordination.", edition_ar: "فرع العذيبة", edition_en: "Al Azaiba" },
       { id: "forms", order: 4, cat: "forms", pages: 6, url: "assets/docs/request-forms.pdf", title_ar: "نماذج الطلبات الإدارية", title_en: "Administrative request forms", desc_ar: "إذن انصراف، طلب سلفة مالية، وطلب إجازة — بالعربية والإنجليزية.", desc_en: "Exit permission, salary advance and leave request — Arabic and English.", edition_ar: "عربي / English", edition_en: "AR / EN" },
       { id: "elearn", order: 5, cat: "training", pages: 20, url: "assets/docs/oppein-elearning-guide.pdf", title_ar: "دليل منصة OPPEIN للتدريب", title_en: "OPPEIN E-Learning guide", desc_ar: "حضور التدريب المباشر من المتصفح أو التطبيق، التسجيلات، والمهام والاختبارات.", desc_en: "Live training on web or app, replays, tasks and exams.", edition_ar: "OPPEIN", edition_en: "OPPEIN" },
+      { id: "salestraining", order: 5.5, cat: "training", pages: 82, url: "assets/docs/sales-training-program-2027.pdf", title_ar: "برنامج تدريب فريق المبيعات", title_en: "Sales Team Training Program", desc_ar: "20 جزءًا على 6 أيام: الشركة وOPPEIN، رحلة العميل، الحوار البيعي والسكريبتات، الاعتراضات والمقارنات، الإغلاق والمتابعة، ثم لعب الأدوار والتقييم. إعداد أحمد صابر، المدير العام لفروع السندباد.", desc_en: "20 modules over 6 days: Sindbad & OPPEIN, the customer journey, sales conversation and scripts, objections and comparisons, closing and follow-up, then role-play and assessment. Prepared by Ahmed Saber, GM of Sindbad branches.", edition_ar: "النسخة الكاملة 2027", edition_en: "Complete edition 2027" },
       { id: "brand", order: 6, cat: "brand", pages: 1, url: "assets/docs/brand-sheet.pdf", title_ar: "دليل الهوية المختصر", title_en: "Mini brand sheet", desc_ar: "الشعار على الخلفيات المختلفة ولوحة الألوان الرسمية.", desc_en: "The logo on different backgrounds and the official palette.", edition_ar: "الهوية", edition_en: "Identity" }
     ]);
     S("apps", [
@@ -690,12 +710,15 @@
     migrateSystems();
     migrateMobile();
     migrateAcks();
+    migrateSalesTraining();
+    migratePrograms();
   }
   function exportAll() {
     const o = { v: 2, at: now(), systemsCatalog: read("seeded", {}).systemsCatalog || 0, cfg: {}, cols: {} };
     COLS.forEach(c => o.cols[c] = list(c));
     o.cols.mobile = list("mobile");
     o.cols.acks = list("acks");
+    o.cols.programs = list("programs");
     ["settings", "company", "contact", "eotm", "seq"].forEach(k => o.cfg[k] = cfg(k, null));
     return o;
   }
@@ -708,12 +731,14 @@
       COLS.forEach(c => write("c:" + c, o.cols[c]));
       if (Array.isArray(o.cols.mobile) && o.cols.mobile.every(x => x && typeof x.id === "string")) write("c:mobile", o.cols.mobile);
       if (Array.isArray(o.cols.acks) && o.cols.acks.every(x => x && typeof x.id === "string")) write("c:acks", o.cols.acks);
+      const progOk = Array.isArray(o.cols.programs) && o.cols.programs.every(x => x && typeof x.id === "string");
+      if (progOk) write("c:programs", o.cols.programs);
       ["settings","company","contact","eotm","seq"].forEach(k=>{if(o.cfg[k]!=null)setCfg(k,o.cfg[k])});
-      write("seeded", { at: now(), v: 2, systemsCatalog: o.systemsCatalog === 1 ? 1 : 0, mobileApps: Array.isArray(o.cols.mobile) ? 1 : 0, acks: 1 });
+      write("seeded", { at: now(), v: 2, systemsCatalog: o.systemsCatalog === 1 ? 1 : 0, mobileApps: Array.isArray(o.cols.mobile) ? 1 : 0, acks: 1, salesTraining: 1, programs: progOk ? 1 : 0 });
     });
   }
 
-  const ready = seed(false).then(migrateSystems).then(migrateMobile).then(migrateAcks).catch(e => console.error("seed", e));
+  const ready = seed(false).then(migrateSystems).then(migrateMobile).then(migrateAcks).then(migrateSalesTraining).then(migratePrograms).catch(e => console.error("seed", e));
 
   global.SB = {
     ready, DOMAIN, DEPTS, ROLES, REQ_TYPES, STATUS, domain, addr,

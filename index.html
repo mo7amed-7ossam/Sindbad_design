@@ -1293,9 +1293,38 @@ const TRAINING_META={
  references:{i:"folder",c:"#B07A4A",ar:"كتب وأدلة للقراءة والرجوع إليها.",en:"Books and guides to read and refer to."}
 };
 function trainingRefs(){return docs().filter(d=>["training","references"].includes(d.cat))}
-function trainingCount(k){return k==="references"?trainingRefs().length:news().filter(n=>trainingCategory(n)===k).length}
+function trainingCount(k){return k==="references"?trainingRefs().length:news().filter(n=>trainingCategory(n)===k).length+(k==="references"?0:progList(k).length)}
 function trainingNews(items){return `<div class="tr-feed">${items.map((n,i)=>{const ex=String(L(n,"body")||"").replace(/\s+/g," ").trim();return `<article class="tr-item ${i===0?"lead":""}" data-news="${esc(n.id)}" tabindex="0"><div class="tr-media">${nimg(n)}</div><div class="tr-txt"><span class="tr-date">${I("cal")}${fdate(nAt(n))}</span><h3>${esc(L(n,"title"))}</h3>${ex?`<p>${esc(ex.length>(i===0?220:120)?ex.slice(0,i===0?220:120)+"…":ex)}</p>`:""}<span class="tr-more">${tx("التفاصيل","Read more")}${I("arrow","flip")}</span></div></article>`}).join("")}</div>`}
 function trainingEmpty(k){const m=TRAINING_META[k];return `<div class="tr-empty"><span class="tr-empty-ic" style="--c:${m.c}">${I(m.i)}</span><h3>${k==="sindbad"?tx("لا توجد تدريبات داخلية منشورة الآن","No in-house training is published yet"):k==="external"?tx("لا توجد تدريبات خارجية منشورة الآن","No external training is published yet"):tx("لا توجد كتب أو مراجع مضافة الآن","No books or references have been added yet")}</h3><p>${tx("عندك موضوع تحتاج تتدرب عليه، أو كتاب تنصح به زملاءك؟ راسل قسم التدريب والتطوير.","Is there a topic you want training on, or a book to recommend? Message Training & Development.")}</p><button class="btn o" data-compose="training">${I("mail")}${tx("راسل قسم التدريب","Message the training team")}</button></div>`}
+/* ---- training programmes (SB "programs", edited in dashboard › Training programmes) ---- */
+const progList=tab=>SB.list("programs").filter(p=>p.status!=="draft"&&(!tab||p.tab===tab)).sort((a,b)=>(a.order||99)-(b.order||99));
+function progOpen(tab){S.tab.progOpen=S.tab.progOpen||{};const id=S.tab.progOpen[tab];return id?progList(tab).find(p=>p.id===id)||null:null}
+const PROG_IMG={sindbad:"leadership",oppein:"onboarding",external:"workspace"};
+const progImg=p=>"assets/images/"+(p.image||PROG_IMG[p.tab]||"leadership")+".webp";
+function progFacts(p){const d=p.docId?docs().find(x=>x.id===p.docId):null,m=(p.modules||[]).length,dy=(p.days||[]).length;
+ return [m?tx(`${m} جزءًا تدريبيًا`,`${m} modules`):"",dy?tx(`${dy} أيام تدريب`,`${dy} training days`):"",d&&d.pages?tx(`${d.pages} صفحة`,`${d.pages} pages`):"",p.passMark?tx(`الاعتماد بـ ${p.passMark}% فأكثر`,`Pass mark ${p.passMark}%`):""].filter(Boolean)}
+function programView(p){
+ const d=p.docId?docs().find(x=>x.id===p.docId):null,rel=p.relatedDoc?docs().find(x=>x.id===p.relatedDoc):null,meta=TRAINING_META[p.tab]||TRAINING_META.sindbad;
+ const days=p.days||[],mods=p.modules||[],ev=(p.eval||[]).filter(e=>e.w>0),rules=(p.rules||[]).filter(r=>r.t_ar||r.t_en||r.d_ar||r.d_en),facts=progFacts(p);
+ const stepList=a=>`<ol class="tr-steps">${a.map(x=>`<li>${x}</li>`).join("")}</ol>`;
+ const modRow=(m,i)=>{const sub=[L(m,"dur"),m.page?tx("صفحة ","p. ")+m.page:""].filter(Boolean).join(" · ");const inner=`<span class="pm-n">${String(i+1).padStart(2,"0")}</span><span class="pm-t"><b>${esc(L(m,"t"))}</b>${sub?`<small>${esc(sub)}</small>`:""}</span>`;
+  return `<li>${d?`<button type="button" class="pm-row" data-doc="${esc(d.id)}" data-page="${m.page|0}">${inner}${I("arrow","flip")}</button>`:`<div class="pm-row">${inner}</div>`}</li>`};
+ const groups=days.length?days.map((x,j)=>({x,j,items:mods.map((m,i)=>[m,i]).filter(([m])=>(m.day||1)===j+1)})):[{x:null,j:0,items:mods.map((m,i)=>[m,i])}];
+ return `<button type="button" class="btn o pm-back" data-progback="${esc(p.tab)}">${I("arrow")}${tx("كل البرامج","All programmes")}</button>
+ <section class="tr-hero"><div class="tr-hero-txt">${L(p,"badge")?`<span class="tr-badge" style="background:${meta.c}">${esc(L(p,"badge"))}</span>`:""}<h2>${esc(L(p,"title"))}</h2>${L(p,"desc")?`<p>${esc(L(p,"desc"))}</p>`:""}
+  <div class="tr-hero-acts">${d?`<button class="btn l" data-doc="${esc(d.id)}">${I("file")}${tx("افتح البرنامج كاملًا","Open the full programme")}</button>`:""}${rel?`<button class="btn g" data-doc="${esc(rel.id)}">${I("folder")}${esc(L(rel,"title"))}</button>`:""}</div></div>
+  ${facts.length||rules.length||L(p,"by")?`<div class="tr-how">${facts.length||L(p,"by")?`<div class="tr-how-col"><h4>${I("file")}${tx("عن البرنامج","About")}</h4>${stepList(facts.map(esc).concat(L(p,"by")?[esc(L(p,"by"))]:[]))}</div>`:""}${rules.length?`<div class="tr-how-col"><h4>${I("shield")}${tx("قبل أن تبدأ","Before you start")}</h4>${stepList(rules.map(r=>`<b>${esc(L(r,"t"))}</b> ${esc(L(r,"d"))}`))}</div>`:""}</div>`:""}
+ </section>
+ ${mods.length?`<div class="tr-sec-h"><h2>${days.length?tx("الخطة الزمنية","Schedule"):tx("أجزاء البرنامج","Modules")}</h2><span>${d?tx("اضغط على الجزء لفتحه في صفحته","Open any module at its page"):""}</span></div>
+ <div class="pm-days">${groups.filter(g=>g.items.length||g.x).map(g=>`<div class="card pm-day">${g.x?`<div class="pm-dh"><span class="chip">${tx("اليوم","Day")} ${g.j+1}</span><h3>${esc(L(g.x,"t"))}</h3></div>`:""}<ol class="pm-list">${g.items.map(([m,i])=>modRow(m,i)).join("")||`<li class="muted pm-none">${tx("لا أجزاء في هذا اليوم","No modules this day")}</li>`}</ol></div>`).join("")}</div>`:""}
+ ${ev.length?`<div class="tr-sec-h" style="margin-top:34px"><h2>${tx("نموذج تقييم المتدرب","Trainee evaluation")}</h2>${p.passMark?`<span>${tx(`الاعتماد ${p.passMark}%`,`Pass ${p.passMark}%`)}</span>`:""}</div>
+ <div class="card pm-eval">${L(p,"passNote")?`<p class="muted">${esc(L(p,"passNote"))}</p>`:""}<ul>${ev.map(e=>`<li><span>${esc(L(e,"t"))}</span><span class="chip">${e.w}%</span></li>`).join("")}</ul></div>`:""}`}
+function programsBlock(tab){
+ const list=progList(tab);if(!list.length)return {html:""};
+ const open=progOpen(tab);if(open)return {detail:true,html:programView(open)};
+ return {html:`<div class="tr-sec-h"><h2>${tx("البرامج التدريبية","Training programmes")}</h2><span>${tx(`${list.length} برنامج`,`${list.length} programmes`)}</span></div>
+ <div class="tr-feed">${list.map((p,i)=>`<article class="tr-item ${i===0?"lead":""}" data-progopen="${esc(p.tab)}:${esc(p.id)}" tabindex="0"><div class="tr-media"><img src="${esc(progImg(p))}" alt=""></div><div class="tr-txt"><span class="tr-date">${I("file")}${esc(progFacts(p).slice(0,2).join(" · "))}</span><h3>${esc(L(p,"title"))}</h3>${L(p,"desc")?`<p>${esc((x=>x.length>(i===0?220:120)?x.slice(0,i===0?220:120)+"…":x)(L(p,"desc")))}</p>`:""}<span class="tr-more">${tx("عرض البرنامج","View programme")}${I("arrow","flip")}</span></div></article>`).join("")}</div>`};
+}
 VIEWS.training=()=>{
  const tab=TRAINING_TABS.some(t=>t[0]===S.tab.training)?S.tab.training:"oppein",label=TRAINING_TABS.find(t=>t[0]===tab),meta=TRAINING_META[tab];
  const updates=news().filter(n=>trainingCategory(n)===tab),platform=SB.get("apps","elearn"),guide=docs().find(d=>d.id==="elearn");
@@ -1303,15 +1332,17 @@ VIEWS.training=()=>{
  const phone=AR()?["ثبّت تطبيق Yunxuetang من رمز QR في الدليل.","أدخل النطاق oppein.yunxuetang.cn ثم التالي.","سجّل الدخول مرة واحدة بنفس الحساب.","افتح التدريب من تبويب Learn أو امسح رمز QR الذي يرسله المقر."]:["Install the Yunxuetang app from the QR code in the guide.","Enter the domain oppein.yunxuetang.cn and continue.","Sign in once with the same account.","Open training under Learn, or scan the QR code HQ sends."];
  const stepList=a=>`<ol class="tr-steps">${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`;
  let body="";
- if(tab==="oppein"){
+ const opb=tab==="oppein"?programsBlock("oppein"):null;
+ if(opb&&opb.detail){body=opb.html}else if(tab==="oppein"){
   body=`<section class="tr-hero"><div class="tr-hero-txt"><span class="tr-badge">OPPEIN</span><h2>${tx("منصة OPPEIN للتدريب","OPPEIN learning platform")}</h2><p>${tx("كل جلسات المصنع المباشرة وتسجيلاتها ومهام التدريب والاختبارات في مكان واحد. الحساب يصلك من مسؤول المبيعات في المقر.","Every live factory session, its replay, training tasks and tests in one place. Your account comes from the HQ sales contact.")}</p><div class="tr-hero-acts">${platform?`<a class="btn l" ${appAttrs(platform)}>${I("ext")}${tx("دخول المنصة","Open the platform")}</a>`:""}${guide?`<button class="btn g" data-doc="elearn">${I("file")}${tx("الدليل المصوّر","Illustrated guide")}</button>`:""}</div></div>
    <div class="tr-how"><div class="tr-how-col"><h4>${I("globe")}${tx("من المتصفح","On the web")}</h4>${stepList(web)}</div><div class="tr-how-col"><h4>${I("finger")}${tx("من الجوال","On your phone")}</h4>${stepList(phone)}</div></div></section>
-  <div class="tr-sec-h"><h2>${tx("جديد تدريب OPPEIN","OPPEIN updates")}</h2>${updates.length?`<span>${tx(`${updates.length} إعلان`,`${updates.length} updates`)}</span>`:""}</div>${updates.length?trainingNews(updates):`<div class="card"><p class="muted" style="margin:0">${tx("لا توجد إعلانات جديدة من OPPEIN الآن. مواعيد الجلسات تُعلن هنا وفي البريد.","No new OPPEIN announcements right now. Session dates are announced here and by mail.")}</p></div>`}`;
+  ${programsBlock("oppein").html}<div class="tr-sec-h"${progList("oppein").length?' style="margin-top:40px"':""}><h2>${tx("جديد تدريب OPPEIN","OPPEIN updates")}</h2>${updates.length?`<span>${tx(`${updates.length} إعلان`,`${updates.length} updates`)}</span>`:""}</div>${updates.length?trainingNews(updates):`<div class="card"><p class="muted" style="margin:0">${tx("لا توجد إعلانات جديدة من OPPEIN الآن. مواعيد الجلسات تُعلن هنا وفي البريد.","No new OPPEIN announcements right now. Session dates are announced here and by mail.")}</p></div>`}`;
  }else if(tab==="references"){
   const refs=trainingRefs();
   body=`<div class="tr-sec-h"><h2>${tx("كتب ومراجع","Books & references")}</h2>${refs.length?`<span>${tx(`${refs.length} مرجع`,`${refs.length} items`)}</span>`:""}</div>${refs.length?`<div class="docs">${refs.map(docCard).join("")}</div>`:trainingEmpty(tab)}`;
  }else{
-  body=`<div class="tr-sec-h"><h2>${tx(label[1],label[2])}</h2>${updates.length?`<span>${tx(`${updates.length} تدريب`,`${updates.length} trainings`)}</span>`:""}</div>${updates.length?trainingNews(updates):trainingEmpty(tab)}`;
+  const pb=programsBlock(tab),prog=pb.html;
+  body=pb.detail?prog:prog+`<div class="tr-sec-h"${prog?' style="margin-top:40px"':""}><h2>${prog?tx("ورش وتدريبات قصيرة","Workshops & short trainings"):tx(label[1],label[2])}</h2>${updates.length?`<span>${tx(`${updates.length} تدريب`,`${updates.length} trainings`)}</span>`:""}</div>${updates.length?trainingNews(updates):prog?`<div class="card"><p class="muted" style="margin:0">${tx("لا توجد ورش أو تدريبات قصيرة منشورة الآن. تُعلن هنا وفي البريد.","No workshops or short trainings right now. They’re announced here and by mail.")}</p></div>`:trainingEmpty(tab)}`;
  }
  return `<div class="ph"><div><h1>${tx("مركز التدريب","Training hub")}</h1><p>${tx("تدريبات OPPEIN والسندباد والجهات الخارجية، ومراجع للقراءة.","OPPEIN, Sindbad and external training, plus books to read.")}</p></div></div>
  <div class="tr-picker" role="tablist" aria-label="${tx("أقسام التدريب","Training categories")}">${TRAINING_TABS.map(([k,ar,en])=>{const m=TRAINING_META[k],n=trainingCount(k);return `<button type="button" role="tab" class="tr-pick ${tab===k?"on":""}" aria-selected="${tab===k}" data-tab="training:${k}" style="--c:${m.c}"><span class="tr-pick-ic">${I(m.i)}</span><span class="tr-pick-t"><b>${tx(ar,en)}</b><small>${tx(m.ar,m.en)}</small></span><em>${n||"–"}</em></button>`}).join("")}</div>
@@ -1335,8 +1366,8 @@ function libRes(list){
   if(S.libMode==="list")return `<div class="card doclist" style="padding:0;overflow:hidden"><div class="list">${list.map(d=>{const c=CATS[d.cat]||CATS.other;return `<div class="row" data-doc="${esc(d.id)}"><span class="th" style="background-image:linear-gradient(165deg,${c.c}cc,rgba(4,30,35,.7)),url(${IMG[CIMG[d.cat]||"shelves"]})"></span><div style="min-width:0"><b style="font-weight:500;display:block">${esc(L(d,"title"))}</b><span class="muted sm">${esc(L(d,"desc"))}</span></div><span class="chip n">${AR()?c.ar:c.en}</span>${ackChip(d)}<span class="muted sm">${d.pages?d.pages+" "+tx("ص","p"):""}</span></div>`}).join("")}</div></div>`;
   return `<div class="docs">${list.map(d=>{const c=CATS[d.cat]||CATS.other;return `<article class="doc" data-doc="${esc(d.id)}" tabindex="0"><div class="cover" style="background:linear-gradient(165deg,${c.c}d9 0%,rgba(4,30,35,.88) 100%),url(${IMG[CIMG[d.cat]||"shelves"]})"><span class="ty">PDF</span><span class="ti">${esc(L(d,"title"))}</span></div><div class="bd"><p>${esc(L(d,"desc"))}</p><div class="ft"><span class="chip" style="background:${c.c}1c;color:${c.c}">${AR()?c.ar:c.en}</span>${d.pages?`<span class="chip n">${d.pages} ${tx("صفحة","pages")}</span>`:""}${L(d,"edition")?`<span class="chip n">${esc(L(d,"edition"))}</span>`:""}</div>${ackChip(d)?`<div class="ack-row">${ackChip(d)}</div>`:""}</div></article>`}).join("")}</div>`;
 }
-async function openDoc(id){
-  const d=docs().find(x=>x.id===id);if(!d)return;const u=String(d.url||"").startsWith("idb:")?await SB.files.get(d.url):safeUrl(d.url);
+async function openDoc(id,page){
+  const d=docs().find(x=>x.id===id);if(!d)return;let u=String(d.url||"").startsWith("idb:")?await SB.files.get(d.url):safeUrl(d.url);if(u&&page>0)u+="#page="+(page|0);
   drawer(L(d,"title"),`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="chip">${AR()?(CATS[d.cat]||CATS.other).ar:(CATS[d.cat]||CATS.other).en}</span>${d.pages?`<span class="chip n">${d.pages} ${tx("صفحة","pages")}</span>`:""}${L(d,"edition")?`<span class="chip n">${esc(L(d,"edition"))}</span>`:""}</div><p class="muted" style="margin:0 0 16px">${esc(L(d,"desc"))}</p>${u?`<iframe class="pdf" src="${esc(u)}" title="PDF" style="height:calc(100vh - 280px)"></iframe>`:emptyBox("file",tx("الملف غير متاح.","File unavailable."))}`,
    (ackFoot(d)+(u?`<a class="btn o" href="${esc(u)}" target="_blank" rel="noopener">${I("ext")}${tx("فتح في تبويب جديد","Open in new tab")}</a>`:""))||"",true);
 }
@@ -1852,7 +1883,10 @@ document.addEventListener("click",async e=>{
  if(x=q("[data-reqf]")){S.reqFilter=x.dataset.reqf;renderView(false);return}
  if(x=q("[data-cancelreq]")){if(await confirmBox(tx("إلغاء الطلب؟","Cancel this request?"),tx("سيرى القسم المختص أن الطلب أُلغي.","The department will see the request as cancelled."),tx("إلغاء الطلب","Cancel request"))){SB.req.cancel(x.dataset.cancelreq,S.me);closeDrawer();toast(tx("أُلغي الطلب","Request cancelled"))}return}
  if(x=q("[data-openthread]")){closeDrawer();S.mbox="inbox";S.mthread=x.dataset.openthread;if(S.view==="mail")renderView(false);else go("mail");return}
- if(x=q("[data-doc]")){openDoc(x.dataset.doc);return}
+ if(x=q("[data-progday]")){const[pid,n]=x.dataset.progday.split(":");S.tab.progDay=S.tab.progDay||{};S.tab.progDay[pid]=+n;renderView(false);return}
+ if(x=q("[data-progopen]")){const[t,pid]=x.dataset.progopen.split(":");S.tab.progOpen=S.tab.progOpen||{};S.tab.progOpen[t]=pid;renderView(false);const c=document.getElementById("trainingContent");if(c)c.scrollIntoView({block:"start"});return}
+ if(x=q("[data-progback]")){S.tab.progOpen=S.tab.progOpen||{};S.tab.progOpen[x.dataset.progback]=null;renderView(false);const c=document.getElementById("trainingContent");if(c)c.scrollIntoView({block:"start"});return}
+ if(x=q("[data-doc]")){openDoc(x.dataset.doc,+x.dataset.page||0);return}
  if(x=q("[data-app]")){e.preventDefault();openApp(x.dataset.app);return}
  if(x=q("[data-news]")){openNews(x.dataset.news);return}
  if(x=q("[data-req]")){openSvc(x.dataset.req);return}

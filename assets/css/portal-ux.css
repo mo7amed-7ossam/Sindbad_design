@@ -668,3 +668,29 @@ body.is-guest #mailBtn,body.is-guest #searchBtn{display:none!important}
 /* hub stays open: let the news drawer sit above it */
 body.hub-open #scrim{z-index:96}
 body.hub-open #drawer{z-index:97}
+
+/* ---------- training programmes (training hub): reuses .tr-feed/.tr-item, .tr-hero/.tr-how, .card and .chip ---------- */
+#trainingContent{scroll-margin-top:96px}
+.pm-back{margin-bottom:16px}
+.pm-back svg{width:16px;height:16px}
+.tr-how-col .tr-steps b{color:#fff;font-weight:600}
+.pm-days{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.pm-day{padding:18px 18px 10px}
+.pm-dh{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.pm-dh h3{margin:0;font-size:16px;font-weight:600}
+.pm-list{list-style:none;margin:0;padding:0}
+.pm-list li+li{border-top:1px solid var(--line)}
+.pm-row{width:100%;display:flex;align-items:center;gap:12px;padding:12px 4px;background:none;border:0;color:var(--ink);font:inherit;text-align:start}
+button.pm-row{cursor:pointer;border-radius:12px;transition:background-color .2s}
+button.pm-row:hover{background:var(--soft)}
+.pm-n{flex:none;width:32px;font-size:13px;font-weight:700;color:var(--soft-ink)}
+.pm-t{flex:1;min-width:0}
+.pm-t b{display:block;font-weight:500;font-size:14.5px;line-height:1.5}
+.pm-t small{display:block;font-size:12.5px;color:var(--muted)}
+.pm-row>svg{width:16px;height:16px;color:var(--muted)}
+.pm-none{padding:12px 4px;font-size:13px}
+.pm-eval p{margin:0 0 10px}
+.pm-eval ul{list-style:none;margin:0;padding:0}
+.pm-eval li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;font-size:14px}
+.pm-eval li+li{border-top:1px solid var(--line)}
+@media (max-width:860px){.pm-days{grid-template-columns:1fr}}
