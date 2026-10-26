@@ -959,12 +959,49 @@ const NAV=[
  {k:"brand",i:"palette",ar:"الهوية",en:"Brand",more:true},
  {k:"profile",i:"user",ar:"حسابي",en:"My account",more:true}
 ];
+/* ---- guest (browse without an account) ---- */
+const GUEST_OK=["home","news","company","brand"];
+const GUEST_USER={id:"guest",name_ar:"زائر",name_en:"Guest",email:"",role:"guest",guest:true,leaveBalance:0};
+const isGuest=()=>!!(S.me&&S.me.guest);
+const guestLocked=k=>isGuest()&&!GUEST_OK.includes(k);
+function enterGuest(){S.me={...GUEST_USER};try{sessionStorage.setItem("sb_guest","1")}catch(_){}go(GUEST_OK.includes(location.hash.slice(1))?location.hash.slice(1):"home",true)}
+function exitGuest(mode){try{sessionStorage.removeItem("sb_guest")}catch(_){}S.me=null;S.authMode=mode||"login";closeDrawer();closeSide();const d=document.getElementById("guestDlg");if(d&&d.open)d.close();renderShell();renderView(false);window.scrollTo(0,0)}
+const LOCK_INFO={
+ mail:["البريد الرسمي","Work mail",["بريدك على @sindbad.om ورسائل الأقسام خاصة بك وحدك.","Your @sindbad.om mailbox and department messages are private to you."]],
+ requests:["طلباتي","My requests",["تقديم الإجازات والسلف والأذونات ومتابعتها مرتبط بحسابك.","Leave, advances and permissions are tied to your account."]],
+ profile:["حسابي","My account",["بياناتك ورصيد إجازتك وكلمة المرور.","Your details, leave balance and password."]],
+ directory:["دليل الزملاء","People directory",["أرقام وبريد الزملاء متاحة لموظفي السندباد فقط.","Colleagues’ contact details are for Sindbad staff only."]],
+ apps:["الأنظمة","Systems",["روابط أنظمة العمل الداخلية مثل Sindflow وOdoo.","Links to internal systems such as Sindflow and Odoo."]],
+ library:["المكتبة","Library",["الأدلة واللوائح والنماذج المعتمدة للاستخدام الداخلي.","Approved manuals, policies and forms for internal use."]],
+ training:["مركز التدريب","Training hub",["منصات التدريب وأدلتها وأخبارها لفريق السندباد.","Training platforms, guides and updates for the Sindbad team."]],
+ policies:["اللوائح","Policies",["ملخص دليل الموظف وحاسبات الجزاءات والإجازات.","The handbook summary plus penalty and leave calculators."]],
+ sales:["مركز المبيعات","Sales hub",["دورة البيع والعمولة ومؤشرات الأداء.","The sales cycle, commission and targets."]]
+};
+function lockView(k){const m=LOCK_INFO[k]||[NAVI[k]?NAVI[k].ar:"",NAVI[k]?NAVI[k].en:"",["هذه الصفحة لموظفي السندباد.","This page is for Sindbad staff."]];
+ return `<div class="ph"><div><h1>${tx(m[0],m[1])}</h1><p>${tx("متاحة بعد تسجيل الدخول","Available after you sign in")}</p></div></div>
+ <section class="glock"><span class="glock-ic">${I("lock")}</span><h2>${tx("سجّل الدخول للمتابعة","Sign in to continue")}</h2><p>${P(m[2])}</p>
+  <div class="glock-acts"><button class="btn p" data-guestlogin>${tx("تسجيل الدخول","Sign in")}</button><button class="btn o" data-guestreg>${tx("إنشاء حساب","Create an account")}</button></div>
+  <button class="glock-back" data-go="home">${I("arrow","rflip")}${tx("العودة للرئيسية","Back to home")}</button></section>
+ <p class="glock-note">${tx("كزائر يمكنك تصفح الرئيسية والأخبار وصفحة الشركة والهوية.","As a guest you can browse Home, News, Company and Brand.")}</p>`}
+function askLogin(what){let d=document.getElementById("guestDlg");if(!d){d=document.createElement("dialog");d.id="guestDlg";document.body.appendChild(d)}
+ d.innerHTML=`<div class="gdlg"><span class="glock-ic sm">${I("lock")}</span><h3>${tx("سجّل الدخول للمتابعة","Sign in to continue")}</h3><p>${what||tx("هذه الخدمة لموظفي السندباد فقط.","This is for Sindbad staff only.")}</p><div class="gdlg-acts"><button class="btn o" data-gclose>${tx("لاحقًا","Not now")}</button><button class="btn p" data-guestlogin>${tx("تسجيل الدخول","Sign in")}</button></div></div>`;
+ d.showModal();d.querySelector("[data-gclose]").onclick=()=>d.close();d.onclick=e=>{if(e.target===d)d.close()}}
+function guestWelcome(){return `<section class="gwel wrap"><div class="gwel-in"><span class="gwel-ic">${I("eye")}</span><div><b>${tx("أنت تتصفح كزائر","You’re browsing as a guest")}</b><p>${tx("تقدر تشوف أخبار الشركة ومعلوماتها. البريد والطلبات والأنظمة والمستندات تحتاج تسجيل الدخول.","You can read company news and information. Mail, requests, systems and documents need you to sign in.")}</p></div><div class="gwel-acts"><button class="btn p" data-guestlogin>${tx("تسجيل الدخول","Sign in")}</button><button class="btn o" data-guestreg>${tx("إنشاء حساب","Create account")}</button></div></div></section>`}
+document.addEventListener("click",e=>{
+ if(e.target.closest("[data-guest]")){e.preventDefault();enterGuest();return}
+ if(e.target.closest("[data-guestlogin]")){e.preventDefault();e.stopImmediatePropagation();exitGuest("login");return}
+ if(e.target.closest("[data-guestreg]")){e.preventDefault();e.stopImmediatePropagation();exitGuest("register");return}
+ if(!isGuest())return;
+ const blocked=e.target.closest("[data-compose],[data-req],[data-doc],[data-search],[data-app],[data-appuse],[data-gotab]");
+ if(blocked){const g=blocked.dataset.gotab;if(g&&GUEST_OK.includes(g.split(":")[0]))return;e.preventDefault();e.stopImmediatePropagation();
+  askLogin(blocked.matches("[data-compose]")?tx("مراسلة الزملاء والأقسام تتم من بريدك الرسمي بعد تسجيل الدخول.","Messaging colleagues and departments uses your work mail after you sign in."):blocked.matches("[data-req]")?tx("تقديم الطلبات مرتبط بحسابك.","Submitting requests is tied to your account."):blocked.matches("[data-doc]")?tx("المستندات المعتمدة للاستخدام الداخلي.","Approved documents are for internal use."):blocked.matches("[data-search]")?tx("البحث يشمل محتوى داخليًا للموظفين.","Search covers internal staff content."):tx("هذه الخدمة لموظفي السندباد فقط.","This is for Sindbad staff only."))}
+},true);
 function isDark(){const h=document.documentElement;return h.dataset.theme==="dark"||(!h.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches)}
 function renderShell(){
   const h=document.documentElement;h.lang=S.lang;h.dir=AR()?"rtl":"ltr";
   document.body.classList.toggle("guest",!S.me);
   if(!S.me)return;
-  const un=news().filter(n=>nAt(n)>S.seenNews).length,mu=unread(),pend=myReqs().filter(r=>["pending","review"].includes(r.status)).length;
+  const un=news().filter(n=>nAt(n)>S.seenNews).length,mu=isGuest()?0:unread(),pend=isGuest()?0:myReqs().filter(r=>["pending","review"].includes(r.status)).length;
   $("#nav").innerHTML=navDesktop(mu,pend);
   $("#mnav").innerHTML=navSheet(mu,pend);
   renderTabbar(mu,pend);
@@ -975,6 +1012,8 @@ function renderShell(){
   $("#langBtn").textContent=AR()?"EN":"ع";
   $("#themeBtn").innerHTML=I(isDark()?"sun":"moon");
   $("#bellDot").hidden=!un;
+  document.body.classList.toggle("is-guest",isGuest());
+  if(isGuest()){$("#sideMe").innerHTML=`<button class="g-signin" data-guestlogin>${I("user")}<span>${tx("تسجيل الدخول","Sign in")}</span></button>`;renderFoot();return}
   const open=!!($("#umenu")&&!$("#umenu").hidden);
   $("#sideMe").innerHTML=`<button class="mebtn" id="meBtn" aria-haspopup="menu" aria-expanded="${open}" aria-label="${esc(uname(S.me))}">${avatarHTML(S.me,34)}</button>
    <div class="umenu" id="umenu" role="menu" ${open?"":"hidden"}><div class="uh">${avatarHTML(S.me,46)}<div style="min-width:0"><b>${esc(uname(S.me))}</b><small>${esc(S.me.email)}</small></div></div>
@@ -1007,7 +1046,7 @@ function go(v,replace=false){
 function renderView(anim){
   const el=$("#view");el.classList.remove("enter");
   if(!S.me){el.innerHTML=authView();paint(el);return}
-  let html=VIEWS[S.view]();
+  let html=guestLocked(S.view)?lockView(S.view):VIEWS[S.view]();
   if(BANNER[S.view]){
     const tmp=document.createElement("div");tmp.innerHTML=html;
     const ph=tmp.querySelector(":scope>.ph");if(ph)ph.remove();
@@ -1057,7 +1096,7 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-appuse]");
 VIEWS.home=()=>{
   S.slide=S.slide||0;const REMS=reminders();if(S.slide>=REMS.length)S.slide=0;
   const now=new Date(),hr=now.getHours(),g=AR()?(hr<12?"صباح الخير":"مساء الخير"):(hr<12?"Good morning":hr<17?"Good afternoon":"Good evening");
-  const first=(uname(S.me)||"").trim().split(/\s+/)[0];
+  const first=isGuest()?"":(uname(S.me)||"").trim().split(/\s+/)[0];
   const N=news(),D=docs().slice(0,4),items=myReqs();
   const A=apps(),odoo=A.find(a=>a.id==="odoo")||{id:"odoo",name_ar:"نظام المبيعات",name_en:"Sales system"},tasks=A.find(a=>a.id==="sindflow");
   const qs=topApps(6);
@@ -1070,13 +1109,13 @@ VIEWS.home=()=>{
    <div class="wrap hgrid"><div class="hcopy" id="hcopy">
     <div class="meta"><span><span class="lv"></span>${now.toLocaleDateString(loc(),{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</span></div>
     <h1><span class="l1">${g}${first?(AR()?"،":","):""}</span>${first?`<span class="l2">${esc(first)}</span>`:""}</h1>
-    <p class="ask">${tx("كل الأدلة والنماذج والأنظمة والزملاء في مكان واحد.","Every manual, form, system and colleague in one place.")}</p>
-    <button class="hsearch" data-search>${I("search")}<span class="t">${tx("ابحث عن دليل، نموذج، نظام أو لائحة…","Search a manual, form, system or policy…")}</span><span class="go">${tx("بحث","Search")}</span></button>
+    <p class="ask">${isGuest()?tx("البوابة الداخلية لفريق السندباد. تصفح الأخبار ومعلومات الشركة.","Sindbad’s internal portal. Browse company news and information."):tx("كل الأدلة والنماذج والأنظمة والزملاء في مكان واحد.","Every manual, form, system and colleague in one place.")}</p>
+    ${isGuest()?`<button class="hsearch g-hcta" data-guestlogin>${I("user")}<span class="t"><span class="g-long">${tx("سجّل الدخول للوصول إلى بريدك وطلباتك وأنظمتك","Sign in to reach your mail, requests and systems")}</span><span class="g-short">${tx("سجّل الدخول للمتابعة","Sign in to continue")}</span></span><span class="go">${tx("دخول","Sign in")}</span></button>`:`<button class="hsearch" data-search>${I("search")}<span class="t">${tx("ابحث عن دليل، نموذج، نظام أو لائحة…","Search a manual, form, system or policy…")}</span><span class="go">${tx("بحث","Search")}</span></button>`}
    </div>
-   <aside class="pray today" aria-live="polite"><h3>${tx("دوام اليوم","Today at work")}</h3><div id="todayBody">${todayInfo()}</div>
+   ${isGuest()?"":`<aside class="pray today" aria-live="polite"><h3>${tx("دوام اليوم","Today at work")}</h3><div id="todayBody">${todayInfo()}</div>
     <ul class="trules"><li>${I("clock")}<span>${tx(`8 ساعات عمل ضمن الفترة من ${hourLabel(workHours()[0])} إلى ${hourLabel(workHours()[1])}`,`8 working hours between ${hourLabel(workHours()[0])} and ${hourLabel(workHours()[1])}`)}</span></li><li>${I("finger")}<span>${tx("الحضور والانصراف بالبصمة أو تطبيق السندباد فقط","Clock in and out by fingerprint or the Sindbad app only")}</span></li><li>${I("exit")}<span>${tx("الخروج أثناء الدوام يحتاج إذنًا مسبقًا من مديرك","Leaving during hours needs your manager’s prior permission")}</span></li></ul>
     ${pend?`<button class="tpend" data-go="requests"><span>${tx(`لديك ${pend} طلب قيد المراجعة`,`${pend} request${pend>1?"s":""} under review`)}</span>${I("arrow","flip").replace("<svg",'<svg style="width:16px;height:16px"')}</button>`:""}
-    <button class="btn tbtn" data-gotab="policies:hours">${I("clock")}${tx("تفاصيل الدوام والحضور","Hours & attendance details")}</button></aside>
+    <button class="btn tbtn" data-gotab="policies:hours">${I("clock")}${tx("تفاصيل الدوام والحضور","Hours & attendance details")}</button></aside>`}
    </div>
    <div class="wrap hbar"><div class="hbin">
     <div class="cap" id="cap">${capHTML(S.slide)}</div>
@@ -1085,8 +1124,8 @@ VIEWS.home=()=>{
    </div></div>
   </section>
 
-  ${myWorkspace()}
-  <div class="wrap"><section class="qs" aria-labelledby="qsT"><header class="qs-h"><h2 id="qsT">${tx("التطبيقات الأكثر استخدامًا","Most used apps")}</h2><a href="#apps" data-go="apps">${tx("كل الأنظمة","All systems")}${I("arrow","flip")}</a></header>${qs.map(a=>{const sh=APP_SHORT[a.id],ext=!!safeUrl(a.url)&&!a.internal;return `<a class="qa" ${appAttrs(a)} style="--c:${esc(a.color||"#0A8BA0")}"><span class="ci">${I(a.icon||"grid")}</span><span class="qt"><b>${esc(L(a,"name"))}</b><span class="s">${sh?P(sh):esc(L(a,"desc"))}</span></span>${ext?`<span class="qx" aria-hidden="true">${I("ext")}</span>`:""}</a>`}).join("")}</section></div>
+  ${isGuest()?guestWelcome():myWorkspace()}
+  ${isGuest()?"":`<div class="wrap"><section class="qs" aria-labelledby="qsT"><header class="qs-h"><h2 id="qsT">${tx("التطبيقات الأكثر استخدامًا","Most used apps")}</h2><a href="#apps" data-go="apps">${tx("كل الأنظمة","All systems")}${I("arrow","flip")}</a></header>${qs.map(a=>{const sh=APP_SHORT[a.id],ext=!!safeUrl(a.url)&&!a.internal;return `<a class="qa" ${appAttrs(a)} style="--c:${esc(a.color||"#0A8BA0")}"><span class="ci">${I(a.icon||"grid")}</span><span class="qt"><b>${esc(L(a,"name"))}</b><span class="s">${sh?P(sh):esc(L(a,"desc"))}</span></span>${ext?`<span class="qx" aria-hidden="true">${I("ext")}</span>`:""}</a>`}).join("")}</section></div>`}
 
   <section class="sec"><div class="wrap">
    <div class="sh"><div><h2>${tx("آخر الأخبار","Latest news")}</h2><p>${tx("قرارات الإدارة وإعلانات الموارد البشرية والفروع.","Decisions from management, HR and the branches.")}</p></div><button class="more" data-go="news">${tx("كل الأخبار","All news")}${I("arrow")}</button></div>
@@ -1096,7 +1135,7 @@ VIEWS.home=()=>{
    ${eo?eomCard(eo):""}
   </div></section>
 
-  <section class="sec"><div class="wrap">
+  ${isGuest()?"":`<section class="sec"><div class="wrap">
    <div class="sh"><div><h2>${tx("ابدأ من دورك","Start from your role")}</h2><p>${tx("أهم ما تحتاج معرفته حسب طبيعة عملك، مرتّبًا بالأولوية.","What you need to know for your job, in order of priority.")}</p></div></div>
    <div class="roles">${ROLES.map(r=>`<div class="role"><div class="rh"><img src="${IMG[r.img]}" alt="" width="1672" height="941" loading="lazy" decoding="async"><b>${P(r.t)}</b><small>${P(r.s)}</small></div><ol>${r.it.map(([a,l],i)=>`<li><button ${actAttr(a)}><span class="n">${i+1}</span><span>${P(l)}</span>${I("arrow","flip")}</button></li>`).join("")}</ol></div>`).join("")}</div>
   </div></section>
@@ -1113,7 +1152,7 @@ VIEWS.home=()=>{
     <button class="tool" data-gotab="sales:comm"><span class="big">1.5%</span><h3>${tx("العمولة التقديرية","Commission estimate")}</h3><p>${tx("الهدف والمحقق، والشريحة المستحقة، وتوزيع الدفعات 50 / 20 / 30.","Target vs achieved, your tier, and the 50 / 20 / 30 payout split.")}</p><span class="more">${tx("افتح الحاسبة","Open calculator")}${I("arrow")}</span></button>
     <button class="tool" data-gotab="policies:leave"><span class="big">60</span><h3>${tx("موعد طلب الإجازة","Leave deadline")}</h3><p>${tx("اختر تاريخ إجازتك لتعرف آخر يوم لتقديم الطلب.","Pick your leave date to see the last day to apply.")}</p><span class="more">${tx("افتح الحاسبة","Open calculator")}${I("arrow")}</span></button>
    </div>
-  </div></section>`;
+  </div></section>`}`;
 };
 /* ---- navigation: grouped information architecture ---- */
 const NAVG=[
@@ -1144,23 +1183,23 @@ function navDesktop(mu,pend){
   if(n.k)return `<a href="#${n.k}" data-go="${n.k}" class="nl ${S.view===n.k?"on":""}" ${S.view===n.k?'aria-current="page"':""}>${AR()?n.ar:n.en}</a>`;
   const c=n.items.reduce((s,k)=>s+navCount(k,mu,pend),0),on=n.items.includes(S.view);
   return `<div class="ng ${on?"on":""}"><button class="nl" type="button" data-ng aria-expanded="false" aria-haspopup="true">${AR()?n.ar:n.en}${c?`<em>${c>99?"99+":c}</em>`:""}${I("down","chev")}</button>
-   <div class="np" role="menu">${n.items.map(k=>{const b=navCount(k,mu,pend);return `<a href="#${k}" data-go="${k}" role="menuitem" class="nit ${S.view===k?"on":""}"><span class="nic">${I(NAVI[k].i)}</span><span class="ntx"><b>${navLbl(k)}</b><small>${P(NAVI[k].d)}</small></span>${b?`<em>${b>99?"99+":b}</em>`:""}</a>`}).join("")}</div></div>`}).join("");
+   <div class="np" role="menu">${n.items.map(k=>{const b=navCount(k,mu,pend);return `<a href="#${k}" data-go="${k}" role="menuitem" class="nit ${S.view===k?"on":""} ${guestLocked(k)?"locked":""}"><span class="nic">${I(NAVI[k].i)}</span><span class="ntx"><b>${navLbl(k)}</b><small>${P(NAVI[k].d)}</small></span>${guestLocked(k)?`<i class="nlock">${I("lock")}</i>`:b?`<em>${b>99?"99+":b}</em>`:""}</a>`}).join("")}</div></div>`}).join("");
 }
 function navSheet(mu,pend){
  const R=SB.ROLES[S.me.role]||SB.ROLES.employee;
- const row=k=>{const b=navCount(k,mu,pend);return `<a href="#${k}" data-go="${k}" class="msr ${S.view===k?"on":""}"><span class="nic">${I(NAVI[k].i)}</span><span class="ntx"><b>${navLbl(k)}</b><small>${P(NAVI[k].d)}</small></span>${b?`<em>${b>99?"99+":b}</em>`:I("arrow","flip chev")}</a>`};
- return `<div class="ms-user">${avatarHTML(S.me,52)}<div style="min-width:0"><b>${esc(uname(S.me))}</b><small>${esc(S.me.email)}</small><span>${AR()?R.ar:R.en}</span></div></div>
+ const row=k=>{const b=navCount(k,mu,pend);return `<a href="#${k}" data-go="${k}" class="msr ${S.view===k?"on":""} ${guestLocked(k)?"locked":""}"><span class="nic">${I(NAVI[k].i)}</span><span class="ntx"><b>${navLbl(k)}</b><small>${P(NAVI[k].d)}</small></span>${guestLocked(k)?`<i class="nlock">${I("lock")}</i>`:b?`<em>${b>99?"99+":b}</em>`:I("arrow","flip chev")}</a>`};
+ return `${isGuest()?`<div class="ms-user"><span class="g-av">${I("eye")}</span><div style="min-width:0"><b>${tx("زائر","Guest")}</b><small>${tx("تصفح بدون حساب","Browsing without an account")}</small></div></div>`:`<div class="ms-user">${avatarHTML(S.me,52)}<div style="min-width:0"><b>${esc(uname(S.me))}</b><small>${esc(S.me.email)}</small><span>${AR()?R.ar:R.en}</span></div></div>`}
   <div class="ms-quick"><button class="mq" data-lang>${I("globe")}${AR()?"English":"العربية"}</button><button class="mq" data-themebtn>${I(isDark()?"sun":"moon")}${isDark()?tx("فاتح","Light"):tx("داكن","Dark")}</button></div>
   <div class="ms-sec">${row("home")}${row("apps")}</div>
   ${NAVG.filter(n=>n.g).map(n=>`<div class="ms-sec"><span class="ms-lbl">${AR()?n.ar:n.en}</span>${n.items.map(row).join("")}</div>`).join("")}
-  <div class="ms-foot">${isStaff()?`<a class="ms-dash" href="dashboard/">${I("panel")}${tx("لوحة التحكم","Dashboard")}</a>`:""}<button class="ms-out" data-logout>${I("exit")}${tx("تسجيل الخروج","Sign out")}</button></div>`;
+  <div class="ms-foot">${isGuest()?`<button class="ms-dash" data-guestlogin>${I("user")}${tx("تسجيل الدخول","Sign in")}</button><button class="ms-out" data-guestreg>${tx("إنشاء حساب","Create an account")}</button>`:`${isStaff()?`<a class="ms-dash" href="dashboard/">${I("panel")}${tx("لوحة التحكم","Dashboard")}</a>`:""}<button class="ms-out" data-logout>${I("exit")}${tx("تسجيل الخروج","Sign out")}</button>`}</div>`;
 }
 function renderTabbar(mu,pend){
  let t=document.getElementById("tabbar");
  if(!t){t=document.createElement("nav");t.id="tabbar";t.className="tabbar";document.body.appendChild(t)}
  t.setAttribute("aria-label",tx("التنقل السريع","Quick navigation"));
- const items=["home","requests","mail","directory"],more=!items.includes(S.view);
- t.innerHTML=items.map(k=>{const b=navCount(k,mu,pend);return `<a href="#${k}" data-go="${k}" class="${S.view===k?"on":""}" ${S.view===k?'aria-current="page"':""}><span class="ti">${I(NAVI[k].i)}${b?`<em>${b>99?"99+":b}</em>`:""}</span><span>${k==="requests"?tx("طلباتي","Requests"):navLbl(k)}</span></a>`}).join("")+`<button type="button" data-openmenu class="${more?"on":""}" aria-label="${tx("كل الصفحات","All pages")}"><span class="ti">${I("menu")}</span><span>${tx("المزيد","More")}</span></button>`;
+ const items=isGuest()?["home","news","company"]:["home","requests","mail","directory"],more=!items.includes(S.view);
+ t.innerHTML=items.map(k=>{const b=navCount(k,mu,pend);return `<a href="#${k}" data-go="${k}" class="${S.view===k?"on":""}" ${S.view===k?'aria-current="page"':""}><span class="ti">${I(NAVI[k].i)}${b?`<em>${b>99?"99+":b}</em>`:""}</span><span>${k==="requests"?tx("طلباتي","Requests"):navLbl(k)}</span></a>`}).join("")+(isGuest()?`<button type="button" data-guestlogin class="g-tab"><span class="ti">${I("user")}</span><span>${tx("دخول","Sign in")}</span></button>`:"")+`<button type="button" data-openmenu class="${more?"on":""}" aria-label="${tx("كل الصفحات","All pages")}"><span class="ti">${I("menu")}</span><span>${tx("المزيد","More")}</span></button>`;
 }
 function closeNav(){document.querySelectorAll(".ng.open").forEach(g=>{g.classList.remove("open");const b=g.querySelector("[data-ng]");if(b)b.setAttribute("aria-expanded","false")})}
 document.addEventListener("click",e=>{
@@ -1302,7 +1341,7 @@ async function openDoc(id){
    (ackFoot(d)+(u?`<a class="btn o" href="${esc(u)}" target="_blank" rel="noopener">${I("ext")}${tx("فتح في تبويب جديد","Open in new tab")}</a>`:""))||"",true);
 }
 /* ---- read acknowledgement ---- */
-const ackOf=d=>S.me?SB.acks.status(S.me.id,d):{required:false};
+const ackOf=d=>S.me&&!isGuest()?SB.acks.status(S.me.id,d):{required:false};
 const pendingAcks=()=>S.me?docs().filter(d=>{const a=ackOf(d);return a.required&&!a.signed}):[];
 function ackChip(d){const a=ackOf(d);if(!a.required)return "";return a.signed?`<span class="ack-chip ok">${I("check")}${tx("قرأته","Read")}</span>`:`<span class="ack-chip need"><i></i>${a.outdated?tx("نسخة محدّثة","Updated version"):tx("بانتظار إقرارك","Needs your sign-off")}</span>`}
 function ackFoot(d){const a=ackOf(d);if(!a.required)return "";
@@ -1456,6 +1495,7 @@ function loginForm(){return `<div class="auth-h"><h2>${tx("تسجيل الدخو
    <label class="check rem"><input type="checkbox" checked>${tx("تذكرني على هذا الجهاز","Keep me signed in on this device")}</label>
    <button class="btn p xl" type="submit">${tx("دخول","Sign in")}</button>
   </form>
+  <button type="button" class="g-entry" data-guest><span class="g-entry-ic">${I("eye")}</span><span class="g-entry-t"><b>${tx("تصفح كزائر","Browse as a guest")}</b><small>${tx("الأخبار ومعلومات الشركة بدون حساب","News and company info, no account needed")}</small></span>${I("arrow","flip")}</button>
   <details class="demo"><summary>${tx("حسابات تجريبية لهذه النسخة","Demo accounts for this prototype")}${I("down").replace("<svg",'<svg style="width:16px;height:16px"')}</summary><div class="rows">${DEMO.map(([e,p,l])=>`<button type="button" data-demo="${e}|${p}">${avatarHTML({name_ar:e,name_en:e},28)}<span><b style="font-weight:600;display:block;font-size:13px">${P(l)}</b><span class="ltr" style="display:block">${e}@${esc(SB.domain())}</span></span>${I("arrow","flip").replace("<svg",'<svg style="width:15px;height:15px;color:var(--muted)"')}</button>`).join("")}</div><p class="muted sm" style="margin:10px 0 0">${tx("بيانات وهمية للعرض فقط. احذف هذا الصندوق عند الربط بخادم حقيقي.","Sample data for preview only. Remove this box when connecting a real server.")}</p></details>`}
 function registerForm(){
   const brs=branches().map(b=>L(b,"name")).concat(tx("المقر الرئيسي","Head office"));
@@ -1495,7 +1535,7 @@ document.addEventListener("input",e=>{if(e.target.id!=="rPw")return;const s=pwSc
 /* ---- Post sign-in welcome hub: systems + what's new ---- */
 function hubKey(){return "sbx:hubOff:"+(S.me&&S.me.id)}
 function hubOff(){try{return localStorage.getItem(hubKey())==="1"}catch(_){return false}}
-function maybeHub(){if(!S.me||hubOff())return false;openHub();return true}
+function maybeHub(){if(!S.me||isGuest()||hubOff())return false;openHub();return true}
 function openHub(){
   closeHub(true);
   const A=apps().slice(0,6),N=news().slice(0,3),now=new Date(),hr=now.getHours();
@@ -1509,7 +1549,7 @@ function openHub(){
    <div class="hub-hello"><span class="hub-date"><i></i>${esc(date)}</span><h1 id="hubT">${g}${AR()?"،":","} <b>${esc(first)}</b></h1><p>${tx("من أين تبدأ اليوم؟ افتح أحد أنظمتك، أو اطّلع على آخر المستجدات.","Where do you want to start? Open one of your systems, or catch up on what’s new.")}</p></div>
    <div class="hub-grid">
     <section class="hub-card hub-apps" aria-labelledby="hubA"><div class="hub-h"><h2 id="hubA">${I("grid")}${tx("أنظمتك","Your systems")}</h2><a href="#apps" data-go="apps" data-hubclose>${tx("كل الأنظمة","All systems")}</a></div>
-     <div class="hub-tiles">${A.map((a,i)=>{const u=safeUrl(a.url);return `<a class="hub-tile" ${appAttrs(a)} style="--i:${i}"><span class="ic" style="background:${esc(a.color)}">${I(a.icon)}</span><b>${esc(L(a,"name"))}</b><small>${esc(L(a,"desc"))}</small>${u?`<span class="hx">${I("ext")}</span>`:""}</a>`}).join("")}</div></section>
+     <div class="hub-tiles">${A.map((a,i)=>{const nt=a.internal==="training",u=safeUrl(a.url)||nt;return `<a class="hub-tile" ${nt?`href="index.html#training" target="_blank" rel="noopener" data-appuse="${esc(a.id)}"`:appAttrs(a)} style="--i:${i}"><span class="ic" style="background:${esc(a.color)}">${I(a.icon)}</span><b>${esc(L(a,"name"))}</b><small>${esc(L(a,"desc"))}</small>${u?`<span class="hx">${I("ext")}</span>`:""}</a>`}).join("")}</div></section>
     <section class="hub-card hub-news" aria-labelledby="hubN"><div class="hub-h"><h2 id="hubN">${I("sparkle")}${tx("ما الجديد","What’s new")}</h2><a href="#news" data-go="news" data-hubclose>${tx("كل الأخبار","All news")}</a></div>
      <div class="hub-list">${N.length?N.map((n,i)=>{const c=NCATS[n.cat]||NCATS.general;return `<button type="button" class="hub-new" data-news="${esc(n.id)}" style="--i:${i}">${nimg(n)}<span class="hn"><em style="--c:${c.c}">${AR()?c.ar:c.en}</em><b>${esc(L(n,"title"))}</b><small>${ago(n.at||n.createdAt)}</small></span></button>`}).join(""):`<p class="hub-empty">${tx("لا جديد الآن.","Nothing new right now.")}</p>`}</div></section>
    </div>
@@ -1524,13 +1564,13 @@ function closeHub(instant){const el=document.getElementById("hub");if(!el)return
   document.body.classList.remove("hub-open");el.removeAttribute("id");
   if(instant===true){el.remove();return}el.classList.remove("on");el.classList.add("off");setTimeout(()=>el.remove(),320)}
 document.addEventListener("click",e=>{const h=e.target.closest(".hub");if(!h||h.classList.contains("off"))return;
-  if(e.target.closest("[data-hubclose],.hub-tile,.hub-new"))closeHub()},true);
+  if(e.target.closest("[data-hubclose]"))closeHub()},true);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.getElementById("hub")){e.preventDefault();closeHub()}});
 async function doLogin(){
   const e=$("#lEmail").value.trim(),p=$("#lPw").value,box=$("#lerr");
   if(!e||!p){box.innerHTML=ferr(tx("أدخل البريد وكلمة المرور.","Enter your email and password."));return}
   const b=$("#loginForm button[type=submit]");b.disabled=true;
-  try{S.me=await SB.auth.login(e,p,"portal");S.authMode="login";S._lastUnread=unread();go(location.hash.slice(1)||"home");if(!maybeHub())toast(tx("أهلًا ","Welcome, ")+uname(S.me))}
+  try{try{sessionStorage.removeItem("sb_guest")}catch(_){}S.me=await SB.auth.login(e,p,"portal");S.authMode="login";S._lastUnread=unread();go(location.hash.slice(1)||"home");if(!maybeHub())toast(tx("أهلًا ","Welcome, ")+uname(S.me))}
   catch(er){const m={invalid:tx("البريد أو كلمة المرور غير صحيحة.","Wrong email or password."),pending:tx("حسابك بانتظار التفعيل من الموارد البشرية.","Your account is awaiting HR activation."),disabled:tx("هذا الحساب موقوف. تواصل مع الموارد البشرية.","This account is disabled. Contact HR.")}[er.code]||tx("تعذّر الدخول.","Couldn’t sign in.");box.innerHTML=ferr(m);b.disabled=false}
 }
 async function doRegister(){
@@ -1776,7 +1816,7 @@ function pindex(){const it=[];
 function rPal(){const q=$("#palQ").value.trim().toLowerCase();PI=pindex().filter(i=>!q||(i.l+" "+(i.kw||"")+" "+i.k).toLowerCase().includes(q)).slice(0,14);PS=Math.min(PS,Math.max(0,PI.length-1));
  $("#palL").innerHTML=PI.length?PI.map((i,n)=>`<li class="${n===PS?"sel":""}" data-pi="${n}"><span class="ic" style="background:${esc(i.c)}">${I(i.i)}</span><span>${esc(i.l)}</span><em>${i.k}</em></li>`).join(""):`<li class="muted">${tx("لا نتائج. جرّب كلمة أخرى.","No results. Try another word.")}</li>`;
  const s=$("#palL .sel");if(s)s.scrollIntoView({block:"nearest"})}
-function openPal(){if(!S.me)return;$("#palQ").value="";$("#palQ").placeholder=tx("ابحث عن دليل، نظام، طلب، لائحة…","Search manuals, systems, requests, policies…");PS=0;rPal();$("#pal").showModal();paint($("#pal"));$("#palQ").focus()}
+function openPal(){if(!S.me||isGuest())return;$("#palQ").value="";$("#palQ").placeholder=tx("ابحث عن دليل، نظام، طلب، لائحة…","Search manuals, systems, requests, policies…");PS=0;rPal();$("#pal").showModal();paint($("#pal"));$("#palQ").focus()}
 function runPal(n){const i=PI[n];if(!i)return;$("#pal").close();setTimeout(i.a,50)}
 function openApp(id){const a=SB.get("apps",id)||{name_ar:id==="attendance"?"تطبيق الحضور":"النظام",name_en:id==="attendance"?"Attendance":"System"};if(["mail","training"].includes(a.internal))return go(a.internal);const u=safeUrl(a.url);if(u)openUrl(u);else drawer(L(a,"name"),`<div class="empty">${I("grid")}<h3>${tx("الرابط غير متاح بعد","Link not available yet")}</h3><p>${tx("لم يتم إعداد رابط هذا النظام. اطلب الرابط من التقنية لتكمل مهمتك.","This system link has not been configured. Ask Technology for access to continue.")}</p></div>`,`<button class="btn o" data-dclose>${tx("إغلاق","Close")}</button><button class="btn p" data-compose="it" data-subject="${esc(tx("طلب رابط: ","Request access: ")+L(a,"name"))}">${I("mail")}${tx("اطلب الرابط من التقنية","Ask Technology")}</button>`)}
 function openNews(id){const n=news().find(x=>x.id===id);if(!n)return;const c=NCATS[n.cat]||NCATS.general;drawer(L(n,"title"),`<div style="border-radius:18px;overflow:hidden;aspect-ratio:16/8;margin-bottom:18px">${nimg(n).replace("<img",'<img style="width:100%;height:100%;object-fit:cover"')}</div><div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><span class="chip" style="background:${c.c}1f;color:${c.c}">${AR()?c.ar:c.en}</span><span class="chip n">${fdate(nAt(n))}</span></div><div style="font-size:16px;line-height:1.9;white-space:pre-line" id="nbody"></div>`);$("#nbody").textContent=L(n,"body")}
@@ -1859,8 +1899,9 @@ window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(S.me
 /* live sync with the dashboard (other tabs) */
 SB.on((k,local)=>{
  if(k==="files"){$$("[data-ref]").forEach(el=>{const u=SB.files.cached(el.dataset.ref);if(u&&el.getAttribute("src")!==u)el.src=u});renderShell();return}
- if(k==="session:portal"){const was=!!S.me;S.me=SB.auth.current("portal");if(was!==!!S.me){renderShell();renderView(false)}return}
+ if(k==="session:portal"){if(isGuest())return;const was=!!S.me;S.me=SB.auth.current("portal");if(was!==!!S.me){renderShell();renderView(false)}return}
  if(!S.me)return;
+ if(isGuest()){const gm={"c:news":["home","news"],"c:branches":["company"],"c:leaders":["company"],"cfg:company":["company"],"cfg:eotm":["home"],"c:reminders":["home"],"cfg:contact":["company"]};if(gm[k])refresh(...gm[k]);return}
  if(k==="c:users"){S.me=SB.auth.current("portal");if(!S.me){toast(tx("انتهت جلستك.","Your session ended."));renderShell();renderView(false);return}}
  if(k==="c:messages"&&!local){const n=unread();if(n>(S._lastUnread||0))toast(tx("وصلتك رسالة جديدة","New message received"));S._lastUnread=n}
  const map={"c:news":["home","news","training"],"c:docs":["home","library","training","policies"],"c:apps":["home","apps","training"],"c:mobile":["apps"],"c:acks":["home","library","policies"],"c:branches":["company"],"c:reminders":["home"],"c:leaders":["company"],"cfg:company":["company"],"cfg:contact":["company"],"cfg:eotm":["home"],"cfg:settings":["home","requests"],"c:requests":["home","requests","profile"],"c:messages":["mail","profile","home"],"c:users":["profile","directory","home"]};
@@ -1887,7 +1928,7 @@ document.addEventListener("click",e=>{if(e.target.closest("[data-dirreset]")){S.
 paint();
 setInterval(()=>{const tb=$("#todayBody");if(tb)tb.innerHTML=todayInfo()},30000);
 SB.ready.then(()=>{
- S.me=SB.auth.current("portal");S._lastUnread=S.me?unread():0;
+ S.me=SB.auth.current("portal");if(!S.me){try{if(sessionStorage.getItem("sb_guest")==="1")S.me={...GUEST_USER}}catch(_){}}S._lastUnread=S.me&&!S.me.guest?unread():0;
  const h=location.hash.slice(1);S.view=VIEWS[h]?h:"home";
  renderShell();renderView(true);onScroll();
 });
